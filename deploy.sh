@@ -34,6 +34,8 @@ rsync -avz --delete \
   --exclude 'deploy.sh' \
   --exclude 'setup-server.sh' \
   --exclude 'visualizations-nginx.conf' \
+  --exclude '*-service-account.json' \
+  --exclude 'nextgen-map-viz-service-account.json' \
   -e "ssh -i $SSH_KEY" \
   $LOCAL_DIR/ $REMOTE_HOST:$REMOTE_DIR/
 

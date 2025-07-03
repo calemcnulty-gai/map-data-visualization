@@ -9,6 +9,11 @@
   - Application now correctly loads `.env.local` in development and `.env.production` in production
   - Added graceful fallback if environment file doesn't exist
 
+- **Deploy Script**: Fixed critical issue where deployment was deleting Google service account JSON file
+  - Added exclusions for service account files in rsync command
+  - Prevents deletion of `nextgen-map-viz-service-account.json` and any `*-service-account.json` files
+  - This was causing "Failed to connect to Google Sheets" errors in production
+
 ## 2024-12-19
 ### Initial Setup
 - Created project overview document defining scope and requirements
