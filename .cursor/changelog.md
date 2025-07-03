@@ -1,5 +1,14 @@
 # MAP Data Visualization Tool - Changelog
 
+## 2024-07-03 - Environment File Loading Fix
+
+### Fixed
+- **Production Environment Variables**: Fixed issue where production server wasn't reading `.env.production` file
+  - Added dotenv package to explicitly load environment files based on NODE_ENV
+  - Modified `next.config.ts` to load `.env.production` when NODE_ENV=production
+  - Application now correctly loads `.env.local` in development and `.env.production` in production
+  - Added graceful fallback if environment file doesn't exist
+
 ## 2024-12-19
 ### Initial Setup
 - Created project overview document defining scope and requirements
