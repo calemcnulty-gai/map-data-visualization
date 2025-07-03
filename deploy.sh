@@ -25,11 +25,14 @@ echo "📤 Uploading files to server..."
 rsync -avz --delete \
   --exclude 'node_modules' \
   --exclude '.env*' \
+  --exclude 'env.local.template' \
+  --exclude 'env.production.template' \
   --exclude '.git' \
   --exclude '.next/cache' \
   --exclude 'storage' \
   --exclude '*.log' \
   --exclude 'deploy.sh' \
+  --exclude 'setup-server.sh' \
   --exclude 'visualizations-nginx.conf' \
   -e "ssh -i $SSH_KEY" \
   $LOCAL_DIR/ $REMOTE_HOST:$REMOTE_DIR/
@@ -49,7 +52,7 @@ ssh -i $SSH_KEY $REMOTE_HOST "cd $REMOTE_DIR && npm ci --production"
 
 # Step 7: Set up environment variables
 echo "🔐 Setting up environment variables..."
-echo "Please ensure .env.local is configured on the server at $REMOTE_DIR/.env.local"
+echo "Please ensure .env.production is configured on the server at $REMOTE_DIR/.env.production"
 
 # Step 8: Enable nginx site
 echo "🔧 Configuring nginx..."
@@ -67,5 +70,5 @@ echo "🌐 Application should be available at https://visualizations.nextgenafte
 echo ""
 echo "⚠️  Don't forget to:"
 echo "1. Set up SSL certificate: sudo certbot --nginx -d visualizations.nextgenafter.school"
-echo "2. Configure .env.local on the server with your secrets"
+echo "2. Configure .env.production on the server with your secrets"
 echo "3. Set up the database if using Prisma" 
