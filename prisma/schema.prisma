@@ -8,41 +8,106 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Student is now the primary source of truth
+model Student {
+  id                String          @id @default(cuid())
+  
+  // Basic information
+  name              String
+  grade             Int
+  age               Int?
+  
+  // Bucket assignment
+  bucket            StudentBucket   @default(PROSPECTIVE_STUDENT)
+  
+  // External reference for syncing with Google Sheets
+  externalId        String?         @unique
+  
+  // Metadata
+  notes             String?         // Any additional notes about the student
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  lastSyncedAt      DateTime?       // When last synced from Google Sheets
+  
+  // Relations
+  scores            SubjectScore[]
+  visualizations    Visualization[]
+  
+  @@index([name])
+  @@index([grade])
+  @@index([bucket])
+  @@index([externalId])
+}
+
+// Enum for student buckets
+enum StudentBucket {
+  TOURNAMENT
+  PROSPECTIVE_TNT
+  PROSPECTIVE_STUDENT
+}
+
+// Subject scores - one record per subject per student
+model SubjectScore {
+  id                String          @id @default(cuid())
+  
+  // Relations
+  studentId         String
+  student           Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // Score data
+  subject           Subject
+  ritScore          Int
+  percentile        Int
+  gradeEquivalent   Float?
+  testDate          DateTime
+  growthProjection  Int?
+  
+  // Metadata
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  @@unique([studentId, subject])
+  @@index([studentId])
+  @@index([subject])
+}
+
+// Subject enum
+enum Subject {
+  MATH
+  READING
+  LANGUAGE
+  SCIENCE
+}
+
+// Visualization records - tracking generated visualizations
 model Visualization {
   id                 String              @id @default(cuid())
+  
+  // Relations
   studentId          String
-  studentName        String
-  subject            String
-  grade              Int
+  student            Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // Visualization data
+  subject            Subject
   fileId             String              @unique
   fileName           String
   fileSize           Int?
+  
+  // Configuration and metrics at time of generation
   config             Json
   ritScore           Int
   percentile         Int
+  grade              Int
   hoursToGradeLevel  Int
   hoursTo90th        Int
   recommendedPackage String
+  
+  // Metadata
   generatedBy        String
   generatedAt        DateTime            @default(now())
-  batchId            String?
-  batch              BatchVisualization? @relation(fields: [batchId], references: [id])
-
-  @@index([studentName])
-  @@index([generatedBy])
-  @@index([generatedAt])
-  @@index([batchId])
-}
-
-model BatchVisualization {
-  id             String          @id @default(cuid())
-  name           String?
-  studentCount   Int
-  generatedBy    String
-  generatedAt    DateTime        @default(now())
-  completedAt    DateTime?
-  visualizations Visualization[]
-
+  
+  @@index([studentId])
+  @@index([subject])
   @@index([generatedBy])
   @@index([generatedAt])
 }

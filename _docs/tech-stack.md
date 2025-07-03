@@ -131,7 +131,7 @@ app/
 │   └── layout.tsx
 ├── api/
 │   ├── auth/[...nextauth]/
-│   ├── sheets/
+│   ├── students/
 │   └── visualizations/
 └── layout.tsx
 ```
@@ -232,7 +232,7 @@ export const authOptions: NextAuthOptions = {
 ## Data Management
 
 ### PostgreSQL
-**Role**: Relational database for persistent storage
+**Role**: Primary database for persistent storage of student data
 
 **Best Practices**:
 - Use appropriate indexes for query performance
@@ -240,12 +240,14 @@ export const authOptions: NextAuthOptions = {
 - Use connection pooling
 - Regular backups
 - Monitor query performance
+- Design schema for student data management
 
 **Common Pitfalls**:
 - Not using indexes on foreign keys
 - N+1 query problems
 - Not handling connection limits
 - Poor schema design
+- Not implementing audit trails
 
 ### Prisma
 **Role**: TypeScript ORM for database access
@@ -265,16 +267,38 @@ export const authOptions: NextAuthOptions = {
 
 **Schema Example**:
 ```prisma
+model Student {
+  id            String   @id @default(cuid())
+  name          String
+  grade         Int
+  age           Int?
+  mathRitScore  Float
+  mathPercentile Float
+  readingRitScore Float
+  readingPercentile Float
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String
+  updatedBy     String?
+  
+  visualizations Visualization[]
+  
+  @@index([name])
+  @@index([grade])
+}
+
 model Visualization {
   id          String   @id @default(cuid())
-  studentName String
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
   subject     String
   imageData   Bytes    // Store PNG as binary
   metadata    Json
   createdAt   DateTime @default(now())
   createdBy   String
   
-  @@index([studentName, subject])
+  @@index([studentId])
   @@index([createdAt])
 }
 ```
@@ -309,30 +333,34 @@ fs.mkdirSync(VISUALIZATIONS_DIR, { recursive: true });
 
 ## External Integrations
 
-### Google Sheets API v4
-**Role**: Access student data from Google Sheets
+### Google Sheets API v4 (Optional - Import Only)
+**Role**: Import student data from Google Sheets
 
 **Best Practices**:
-- Use service account for server-side auth
-- Implement proper rate limiting
-- Cache data appropriately
-- Handle API errors gracefully
-- Use batch requests when possible
+- Use for one-time imports only
+- Validate imported data thoroughly
+- Map sheet columns to database fields
+- Handle missing or invalid data gracefully
+- Provide clear import status feedback
 
 **Common Pitfalls**:
-- Hitting rate limits
-- Not handling network errors
-- Inefficient data fetching
 - Not validating data structure
+- Assuming consistent sheet format
+- Not handling rate limits
+- Poor error messaging
 
-**Setup Pattern**:
+**Import Pattern**:
 ```typescript
-const auth = new google.auth.GoogleAuth({
-  keyFile: 'path/to/service-account-key.json',
-  scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-});
-
-const sheets = google.sheets({ version: 'v4', auth });
+// Used only for bulk import functionality
+async function importFromGoogleSheets(sheetId: string) {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: 'path/to/service-account-key.json',
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  });
+  
+  const sheets = google.sheets({ version: 'v4', auth });
+  // Fetch data, validate, and insert into database
+}
 ```
 
 ---
@@ -389,14 +417,16 @@ async function exportToPNG(element: HTMLElement): Promise<Blob> {
 
 **Store Pattern**:
 ```typescript
-interface VisualizationStore {
-  selectedStudents: Student[];
-  visualizationConfig: VisualizationConfig;
-  setSelectedStudents: (students: Student[]) => void;
-  updateConfig: (config: Partial<VisualizationConfig>) => void;
+interface StudentStore {
+  students: Student[];
+  selectedStudent: Student | null;
+  addStudent: (student: Student) => void;
+  updateStudent: (id: string, updates: Partial<Student>) => void;
+  deleteStudent: (id: string) => void;
+  setSelectedStudent: (student: Student | null) => void;
 }
 
-const useVisualizationStore = create<VisualizationStore>((set) => ({
+const useStudentStore = create<StudentStore>((set) => ({
   // ... implementation
 }));
 ```
@@ -415,6 +445,7 @@ const useVisualizationStore = create<VisualizationStore>((set) => ({
 - Configure Nginx as reverse proxy
 - Automate deployments with scripts
 - Regular security updates
+- Automated database backups
 
 **Common Pitfalls**:
 - Not setting up proper monitoring
@@ -503,7 +534,7 @@ module.exports = {
 - **Data Fetching**: Implement proper caching strategies
 - **Database Queries**: Use Prisma's query analysis
 - **Memory Management**: Profile Canvas usage
-- **API Rate Limiting**: Implement for Google Sheets API
+- **API Rate Limiting**: Implement for all endpoints
 
 ---
 
@@ -516,4 +547,5 @@ module.exports = {
 - **CORS**: Configure properly for API routes
 - **File Upload**: Validate file types and sizes
 - **Authentication**: Implement proper session management
-- **Authorization**: Check permissions on every request 
+- **Authorization**: Check permissions on every request
+- **Data Privacy**: Implement proper access controls for student data 

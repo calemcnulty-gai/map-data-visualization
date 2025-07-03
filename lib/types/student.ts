@@ -9,6 +9,7 @@ export interface Student {
   name: string;
   grade: number;
   age?: number;
+  bucket?: string;
   scores: SubjectScores;
   lastUpdated: Date;
 }

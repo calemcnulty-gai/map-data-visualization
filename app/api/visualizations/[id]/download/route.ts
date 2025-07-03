@@ -39,7 +39,6 @@ export async function GET(
         id: true,
         fileId: true,
         fileName: true,
-        studentName: true,
         subject: true,
       },
     });

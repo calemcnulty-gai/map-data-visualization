@@ -4,15 +4,21 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useStudentStore } from '@/stores/student-store';
 import { MapVisualization } from '@/components/visualizations/map-visualization';
-import { VisualizationTemplateSelector } from '@/components/visualization-template-selector';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   generatePngFromElement, 
   downloadBlob, 
   generateFilename 
 } from '@/services/image-generation/png-generator';
-import { DEFAULT_VISUALIZATION_CONFIG, VisualizationConfig, VisualizationTemplate } from '@/lib/types';
+import { DEFAULT_VISUALIZATION_CONFIG, VisualizationConfig } from '@/lib/types';
 import { ArrowLeft, Download, Loader2 } from 'lucide-react';
 import {
   calculateHoursToGradeLevel,
@@ -25,7 +31,7 @@ export default function VisualizePage() {
   const params = useParams();
   const studentId = params.studentId as string;
   
-  const { students, selectedStudents, syncStudents, selectStudent } = useStudentStore();
+  const { students, selectedStudents, syncStudentsFromSheets, selectStudent } = useStudentStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState<VisualizationConfig>(DEFAULT_VISUALIZATION_CONFIG);
@@ -41,7 +47,7 @@ export default function VisualizePage() {
       // If we don't have the student data, try to sync from sheets
       if (!student && students.length === 0) {
         try {
-          await syncStudents();
+          await syncStudentsFromSheets();
         } catch (error) {
           console.error('Failed to sync students:', error);
         }
@@ -56,7 +62,7 @@ export default function VisualizePage() {
     };
 
     loadStudent();
-  }, [studentId, student, students.length, syncStudents, selectStudent, selectedStudents]);
+  }, [studentId, student, students.length, syncStudentsFromSheets, selectStudent, selectedStudents]);
 
   // Redirect if student not found after loading
   useEffect(() => {
@@ -167,14 +173,6 @@ export default function VisualizePage() {
     setSelectedSubject(subject);
   };
 
-  const handleTemplateChange = (template: VisualizationTemplate, templateConfig: Partial<VisualizationConfig>) => {
-    setConfig({
-      ...config,
-      ...templateConfig,
-      template,
-    });
-  };
-
   return (
     <div className="container mx-auto py-8">
       {/* Header */}
@@ -192,168 +190,57 @@ export default function VisualizePage() {
         </div>
       </div>
 
-      {/* Configuration Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Template Selection - Full width on large screens */}
-        <div className="lg:col-span-3">
-          <VisualizationTemplateSelector
-            selectedTemplate={config.template}
-            onTemplateChange={handleTemplateChange}
-            disabled={isGenerating}
-          />
-        </div>
-
-        {/* Subject Selection */}
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3">Subject</h3>
-          <div className="space-y-2">
-            {hasAnyData ? (
-              <>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="math"
-                    checked={selectedSubject === 'math'}
-                    onChange={() => handleSubjectChange('math')}
-                    disabled={!student.scores.math || isGenerating}
-                  />
-                  Math
-                  {!student.scores.math && (
-                    <span className="text-xs text-muted-foreground">(No data)</span>
-                  )}
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="reading"
-                    checked={selectedSubject === 'reading'}
-                    onChange={() => handleSubjectChange('reading')}
-                    disabled={!student.scores.reading || isGenerating}
-                  />
-                  Reading
-                  {!student.scores.reading && (
-                    <span className="text-xs text-muted-foreground">(No data)</span>
-                  )}
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="language"
-                    checked={selectedSubject === 'language'}
-                    onChange={() => handleSubjectChange('language')}
-                    disabled={!student.scores.language || isGenerating}
-                  />
-                  Language
-                  {!student.scores.language && (
-                    <span className="text-xs text-muted-foreground">(No data)</span>
-                  )}
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="science"
-                    checked={selectedSubject === 'science'}
-                    onChange={() => handleSubjectChange('science')}
-                    disabled={!student.scores.science || isGenerating}
-                  />
-                  Science
-                  {!student.scores.science && (
-                    <span className="text-xs text-muted-foreground">(No data)</span>
-                  )}
-                </label>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No subject data available</p>
-            )}
-          </div>
-        </Card>
-
-        {/* Layout Selection */}
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3">Layout</h3>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="portrait"
-                checked={config.layout === 'portrait'}
-                onChange={() => setConfig({ ...config, layout: 'portrait' })}
-                disabled={isGenerating}
-              />
-              Portrait (Email)
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="landscape"
-                checked={config.layout === 'landscape'}
-                onChange={() => setConfig({ ...config, layout: 'landscape' })}
-                disabled={isGenerating}
-              />
-              Landscape (Print)
-            </label>
-          </div>
-        </Card>
-
-        {/* Advanced Options */}
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3">Advanced Options</h3>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={config.includeProjections}
-                onChange={(e) => setConfig({ ...config, includeProjections: e.target.checked })}
-                disabled={isGenerating}
-              />
-              Show Projections
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={config.includeGradeLevelTargets}
-                onChange={(e) => setConfig({ ...config, includeGradeLevelTargets: e.target.checked })}
-                disabled={isGenerating}
-              />
-              Show Grade Targets
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={config.includePeerComparison}
-                onChange={(e) => setConfig({ ...config, includePeerComparison: e.target.checked })}
-                disabled={isGenerating}
-              />
-              Show Peer Comparison
-            </label>
-          </div>
-        </Card>
-      </div>
-
       {/* Visualization Preview */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Preview</h2>
-          {hasSubjectData && (
-            <Button
-              onClick={handleDownload}
-              disabled={!hasSubjectData || isGenerating}
-              className="gap-2 bg-nextgen-green hover:bg-nextgen-green/90"
-              size="sm"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4" />
-                  Download PNG
-                </>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            {hasAnyData && (
+              <Select
+                value={selectedSubject}
+                onValueChange={(value) => handleSubjectChange(value as 'math' | 'reading' | 'language' | 'science')}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select a subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {student.scores.math && (
+                    <SelectItem value="math">Math</SelectItem>
+                  )}
+                  {student.scores.reading && (
+                    <SelectItem value="reading">Reading</SelectItem>
+                  )}
+                  {student.scores.language && (
+                    <SelectItem value="language">Language</SelectItem>
+                  )}
+                  {student.scores.science && (
+                    <SelectItem value="science">Science</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+            {hasSubjectData && (
+              <Button
+                onClick={handleDownload}
+                disabled={!hasSubjectData || isGenerating}
+                className="gap-2 bg-nextgen-green hover:bg-nextgen-green/90"
+                size="sm"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Download PNG
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
         {hasSubjectData ? (
           <div 

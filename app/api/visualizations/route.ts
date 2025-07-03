@@ -9,11 +9,12 @@ import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { saveFile } from '@/services/storage/file-storage';
 import { z } from 'zod';
+import { Subject } from '@/lib/generated/prisma';
 
 // Validation schema for visualization creation
 const createVisualizationSchema = z.object({
   studentId: z.string(),
-  studentName: z.string(),
+  studentName: z.string(), // Still accept it but we won't store it
   subject: z.enum(['math', 'reading', 'language', 'science']),
   grade: z.number(),
   config: z.object({
@@ -81,12 +82,14 @@ export async function POST(request: NextRequest) {
     // Save file to storage
     const fileResult = await saveFile(imageBuffer, data.fileName);
 
+    // Map subject string to enum
+    const subjectEnum = data.subject.toUpperCase() as Subject;
+
     // Create database record
     const visualization = await prisma.visualization.create({
       data: {
         studentId: data.studentId,
-        studentName: data.studentName,
-        subject: data.subject,
+        subject: subjectEnum,
         grade: data.grade,
         fileId: fileResult.id,
         fileName: data.fileName,
@@ -118,98 +121,6 @@ export async function POST(request: NextRequest) {
         error: {
           code: 'SERVER_ERROR',
           message: 'Failed to save visualization',
-          details: error instanceof Error ? error.message : 'Unknown error',
-        },
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// GET /api/visualizations - Get visualization history
-export async function GET(request: NextRequest) {
-  try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'You must be logged in to view visualizations',
-          },
-        },
-        { status: 401 }
-      );
-    }
-
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
-    const studentName = searchParams.get('studentName');
-    const subject = searchParams.get('subject');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Build query conditions
-    const where: any = {};
-    if (studentName) {
-      where.studentName = {
-        contains: studentName,
-        mode: 'insensitive',
-      };
-    }
-    if (subject) {
-      where.subject = subject;
-    }
-
-    // Fetch visualizations
-    const [visualizations, total] = await Promise.all([
-      prisma.visualization.findMany({
-        where,
-        orderBy: {
-          generatedAt: 'desc',
-        },
-        skip: offset,
-        take: limit,
-        select: {
-          id: true,
-          studentName: true,
-          subject: true,
-          grade: true,
-          fileName: true,
-          fileSize: true,
-          ritScore: true,
-          percentile: true,
-          recommendedPackage: true,
-          generatedBy: true,
-          generatedAt: true,
-        },
-      }),
-      prisma.visualization.count({ where }),
-    ]);
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        visualizations,
-        pagination: {
-          total,
-          limit,
-          offset,
-          hasMore: offset + limit < total,
-        },
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching visualizations:', error);
-    
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'SERVER_ERROR',
-          message: 'Failed to fetch visualizations',
           details: error instanceof Error ? error.message : 'Unknown error',
         },
       },

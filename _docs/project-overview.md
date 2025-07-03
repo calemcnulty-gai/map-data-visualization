@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-A web-based visualization tool that transforms MAP (Measures of Academic Progress) test data from Google Sheets into compelling, parent-friendly visualizations. The tool will generate professional PNG images showing student performance metrics and projected improvements with NextGen Academy tutoring packages, designed to effectively communicate the value of tutoring services to parents.
+A web-based visualization tool that transforms MAP (Measures of Academic Progress) test data into compelling, parent-friendly visualizations. The tool enables NextGen Academy staff to manage student data directly within the platform and generate professional PNG images showing student performance metrics and projected improvements with tutoring packages, designed to effectively communicate the value of tutoring services to parents.
 
 ---
 
@@ -18,10 +18,11 @@ Create data-driven visualizations that:
 
 ## Key Features
 
-### Data Integration
-- **Google Sheets API Integration**: Direct connection to live MAP data spreadsheet
-- **Automated Data Processing**: Parse student scores, percentiles, and grade levels
-- **Real-time Updates**: Reflect changes in source data immediately
+### Data Management
+- **Student Database**: Create, update, and delete student records directly in the platform
+- **Data Entry Forms**: User-friendly interfaces for entering MAP test scores and student information
+- **Data Validation**: Ensure data accuracy with built-in validation rules
+- **Import/Export Options**: Bulk import capabilities and data export for backups
 
 ### Visualization Components
 - **Current Performance Chart**: Student's RIT score vs. grade-level benchmarks
@@ -36,7 +37,7 @@ Create data-driven visualizations that:
 ### User Management
 - **Google Authentication**: Secure login via Google OAuth
 - **Access Control**: Limited to @esports.school and @superbuilders.school domains
-- **Multi-user Support**: Tutors and staff can generate visualizations for any student
+- **Multi-user Support**: Tutors and staff can manage students and generate visualizations
 
 ### Output Generation
 - **High-quality PNG Export**: Email-ready visualizations
@@ -47,10 +48,10 @@ Create data-driven visualizations that:
 
 ## Technical Requirements
 
-### Data Source
-- **Primary Source**: Google Sheets via API
-- **Sheet URL**: https://docs.google.com/spreadsheets/d/1ACqYKCG6wYELruWp-vppRll-4lnvVmgP9RbevVA9V8U/
+### Data Storage
+- **Primary Database**: PostgreSQL for persistent student data storage
 - **Data Fields**: Student name, age/grade, subject, RIT scores, percentiles, improvement projections
+- **Audit Trail**: Track changes to student records with timestamps and user information
 
 ### Calculation Logic
 - **RIT Score Improvements**: Based on established formulas (see RIT Score Calculations document)
@@ -73,7 +74,10 @@ Create data-driven visualizations that:
 ## User Workflow
 
 1. **Authentication**: Staff member logs in with authorized Google account
-2. **Data Selection**: Choose student(s) from synchronized Google Sheet data
+2. **Student Management**: 
+   - Add new students with their MAP test data
+   - Update existing student records
+   - Search and filter student database
 3. **Visualization Generation**: System creates customized charts showing:
    - Current performance status
    - Improvement projections for each tutoring package
@@ -90,6 +94,7 @@ Create data-driven visualizations that:
 - **Efficiency**: Staff can generate visualizations in under 2 minutes
 - **Accuracy**: All calculations align with MAP scoring methodology
 - **Professional**: Output quality reflects NextGen Academy's standards
+- **Data Integrity**: Reliable student data management with validation
 
 ---
 
@@ -97,36 +102,41 @@ Create data-driven visualizations that:
 
 ### Phase 1: Foundation
 - Basic authentication system
-- Google Sheets integration
-- Core data processing
+- Database schema design
+- Core data models and validation
 
 ### Phase 2: MVP
+- Student CRUD operations
 - Essential visualization generation
 - PNG export functionality
-- Basic UI for data selection
+- Basic UI for data management
 
 ### Phase 3: Enhancement
 - Advanced visualization options
-- Batch processing capabilities
+
 - Performance optimizations
 - Additional chart types
+- Data import/export features
 
 ---
 
 ## Constraints & Considerations
 
-- **Data Privacy**: No persistent storage of student data
-- **Performance**: Handle sheets with 500+ student records efficiently
+- **Data Privacy**: Secure storage of student data with proper access controls
+- **Performance**: Handle database with 1000+ student records efficiently
 - **Scalability**: Support multiple concurrent users
 - **Browser Compatibility**: Modern browsers (Chrome, Firefox, Safari, Edge)
 - **Mobile**: Responsive design for tablet use (phone support not required)
+- **Data Backup**: Regular automated backups of student database
 
 ---
 
 ## Expected Outcomes
 
 A professional tool that empowers NextGen Academy staff to:
+- Efficiently manage student MAP test data
 - Quickly generate compelling visualizations
 - Communicate student progress effectively
 - Demonstrate tutoring value proposition
-- Increase enrollment through data-driven conversations 
+- Increase enrollment through data-driven conversations
+- Maintain accurate, up-to-date student records 

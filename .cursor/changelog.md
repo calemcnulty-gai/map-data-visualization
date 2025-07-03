@@ -584,3 +584,182 @@ Phase 3 will focus on:
   - Built and deployed Next.js application
   - PM2 process manager configured and running
   - Application is live and accessible 
+
+## 2025-01-03 - Database as Source of Truth
+
+### Major Changes
+- **Database Schema Redesign**: Completely redesigned the database schema to make it the primary source of truth
+  - Created new `Student` model with support for buckets (Tournament, Prospective TNT, Prospective Student)
+  - Added `SubjectScore` model for normalized score storage (one record per subject per student)
+  - Added proper relationships between Student, SubjectScore, and Visualization models
+  - Removed old schema and started fresh with proper structure
+
+### New Features
+- **Student CRUD Operations**: Implemented full CRUD functionality for students
+  - Created `StudentService` class with comprehensive database operations
+  - Added API endpoints for creating, reading, updating, and deleting students
+  - Added support for managing individual subject scores
+  - Implemented search, filter by grade, and filter by bucket functionality
+
+### API Endpoints Created
+- `GET /api/students` - Get all students with optional filtering
+- `POST /api/students` - Create a new student
+- `GET /api/students/[id]` - Get a single student
+- `PATCH /api/students/[id]` - Update a student
+- `DELETE /api/students/[id]` - Delete a student
+- `POST /api/students/[id]/scores` - Add/update a subject score
+- `DELETE /api/students/[id]/scores?subject=MATH` - Delete a subject score
+
+### Database Integration
+- **Google Sheets Sync**: Updated sync endpoint to save data to database
+  - Sync now performs upsert operations to update existing students
+  - Maintains external ID reference for syncing
+  - Tracks last sync timestamp
+  - All subject scores are properly saved to database
+
+### Technical Details
+- Used Prisma transactions for data consistency during sync
+- Implemented proper error handling and validation using Zod
+- Added indexes for performance on commonly queried fields
+- Set up cascade deletes for data integrity
+
+### Bug Fixes
+- **Visualization API Compatibility**: Fixed visualization endpoints to work with new schema
+  - Updated `/api/visualizations` GET endpoint to fetch student name through relation
+  - Fixed batch download endpoint to access student name correctly
+  - Removed direct `studentName` field references in favor of `student.name`
+  - Maintained backward compatibility by transforming data to expected format
+
+### UI/UX Improvements
+- **Faster Dashboard Loading**: Dashboard now loads students from database immediately
+  - Students are loaded from the database first (fast)
+  - Google Sheets sync happens in the background (slow)
+  - Added proper loading states with spinner indicators
+  - Added sync status indicator showing when background sync is running
+  - Updated button text from "Refresh Data" to "Sync from Sheets" for clarity
+  - Disabled controls during initial load to prevent errors
+
+### Next Steps
+- Update UI components to fetch from database instead of Zustand store
+- Add UI for student CRUD operations
+- Implement bucket management in the UI
+- Add manual student creation form 
+
+### 2025-01-07 (Student Management Implementation)
+- **Transitioned from Google Sheets to Database-Centric Architecture**
+  - Updated all documentation to reflect database as primary data source
+  - Google Sheets integration now optional for bulk import only
+  - Students managed directly within the platform with full CRUD operations
+
+- **Added Student Creation Functionality**
+  - Created "Add Student" button in dashboard next to "Sync from Sheets"
+  - Implemented modal dialog with comprehensive student form
+  - Form includes fields for:
+    - Student name and grade level
+    - RIT scores and percentiles for all four subjects (Math, Reading, Science, Language)
+    - Student type dropdown (Tournament, Prospective TNT, Prospective Student)
+  - Form validates at least one subject has scores before submission
+  - After successful creation, automatically navigates to visualization page
+
+- **Technical Implementation**
+  - Created `AddStudentForm` component with validation and error handling
+  - Updated student API route to handle scores and student type mapping
+  - Extended student store with `addStudent` method for real-time updates
+  - Installed Shadcn UI components: Dialog, Select, Label
+  - Updated StudentService to support creating students with scores
+  - Mapped frontend student types to database StudentBucket enum
+
+- **UI/UX Improvements**
+  - Modal provides clear instructions and required field indicators
+  - Real-time validation feedback for user input
+  - Loading states during submission
+  - Automatic addition to student list without page refresh
+  - Seamless transition to visualization generation after creation 
+
+### Removed Batch Visualization Feature (Latest)
+- Removed batch visualization page (`/dashboard/visualize/batch`)
+- Deleted batch download API endpoint (`/api/visualizations/batch/download`)
+- Removed BatchVisualization model from Prisma schema
+- Removed batch relation from Visualization model
+- Cleaned up documentation to remove batch processing references
+- Simplified user flow to focus on single student visualizations 
+
+## 2025-01-08 - Database and State Management Optimization
+
+### Fixed Performance Issues
+- **Eliminated N+1 Query Problem**: Replaced individual student/score upserts with batch operations
+  - Changed from ~60+ individual queries to a single transaction with batch inserts
+  - New students are now inserted in bulk with `createMany`
+  - Scores are batch inserted after all students are created
+  - Sync operation now completes in a single database transaction
+
+- **Removed UI Flashing**: Fixed unnecessary re-renders and data reloading
+  - Dashboard now loads students from database only once on mount
+  - Removed automatic Google Sheets sync on page load (now manual only)
+  - Sync operation adds new students to existing state without full reload
+  - Delete and update operations modify state directly without database reload
+
+### State Management Improvements
+- **Added Store Actions**: 
+  - `updateStudent`: Updates a student in the store without reloading
+  - `deleteStudent`: Removes a student from the store without reloading
+  - Modified `syncStudentsFromSheets` to append new students instead of reloading
+
+- **Optimized Data Flow**:
+  - Student table uses local state for all operations
+  - API calls update the database, then update local state on success
+  - No redundant database queries or full table re-renders
+  - Filtering and sorting happen on cached data in memory
+
+### Database Service Enhancements
+- **Created `efficientSyncFromSheets` Method**:
+  - Fetches all existing external IDs in a single query
+  - Filters to only new students before any database operations
+  - Uses batch operations for all inserts
+  - Returns only newly added students for state update
+
+- **Query Optimizations**:
+  - Added proper ordering to score includes
+  - Reduced Prisma logging to errors only in development
+  - Eliminated redundant student fetches after operations
+
+### UI/UX Improvements
+- **Sync Button Behavior**:
+  - Now properly shows loading state during sync
+  - Updates only show new student count
+  - No visual disruption to existing table data
+  - Maintains scroll position and filter state
+
+- **CRUD Operations**:
+  - Delete removes row immediately without reload
+  - Edit updates row in place without reload
+  - Add inserts new row in correct sort position
+  - All operations feel instant to the user
+
+### Technical Details
+- Reduced database queries from 60+ to ~3 for a typical sync operation
+- Page load time improved by removing automatic sync
+- State updates are now synchronous and immediate
+- Memory usage reduced by eliminating duplicate data fetching
+
+## Recent Changes
+
+### 2025-01-08
+- Made target lines more prominent (thicker, better positioned labels) 
+
+### Fixed Infinite Loop in Edit Form
+- **Fixed Zustand Selector Issue**: Resolved infinite re-render loop in AddStudentForm
+  - Changed from object selector `useStudentStore((state) => ({ addStudent: state.addStudent, updateStudent: state.updateStudent }))`
+  - To separate selectors: `useStudentStore((state) => state.addStudent)` and `useStudentStore((state) => state.updateStudent)`
+  - Object selectors create new references on each render, causing React to think the store changed
+  - This was causing "Maximum update depth exceeded" errors when editing students
+
+### UI Improvements - Student Type Pills
+- **Updated Student Type Colors**: Improved visual distinction using NextGen branding
+  - **Tournament**: Now uses NextGen purple (#251931) with white text
+  - **Prospective TNT**: Now uses darker NextGen green (#559A36) with white text  
+  - **Prospective Student**: Remains light gray with dark text for contrast
+  - Increased padding (px-3 py-1) and font weight (font-semibold) for better readability
+  - Colors are now visually distinct and align with NextGen Academy branding
+
+## Recent Changes 

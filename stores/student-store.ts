@@ -16,11 +16,15 @@ interface StudentStore {
   syncError: string | null;
   searchQuery: string;
   gradeFilter: number | null;
-  subjectFilter: 'all' | 'math' | 'reading';
+  bucketFilter: string | null;
 
   // Actions - Data Management
   setStudents: (students: Student[]) => void;
-  syncStudents: () => Promise<void>;
+  addStudent: (student: Student) => void;
+  updateStudent: (id: string, updates: Partial<Student>) => void;
+  deleteStudent: (id: string) => void;
+  loadStudentsFromDb: () => Promise<void>;
+  syncStudentsFromSheets: () => Promise<void>;
   clearSyncError: () => void;
 
   // Actions - Selection
@@ -32,7 +36,7 @@ interface StudentStore {
   // Actions - Filtering
   setSearchQuery: (query: string) => void;
   setGradeFilter: (grade: number | null) => void;
-  setSubjectFilter: (subject: 'all' | 'math' | 'reading') => void;
+  setBucketFilter: (bucket: string | null) => void;
   clearFilters: () => void;
 
   // Computed
@@ -50,12 +54,59 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
   syncError: null,
   searchQuery: '',
   gradeFilter: null,
-  subjectFilter: 'all',
+  bucketFilter: null,
 
   // Data Management Actions
-  setStudents: (students) => set({ students, lastSyncTime: new Date() }),
+  setStudents: (students) => set({ students }),
+  
+  addStudent: (student) => 
+    set((state) => ({
+      students: [...state.students, student].sort((a, b) => {
+        // Sort by grade first, then by name
+        if (a.grade !== b.grade) {
+          return a.grade - b.grade;
+        }
+        return a.name.localeCompare(b.name);
+      }),
+    })),
 
-  syncStudents: async () => {
+  updateStudent: (id, updates) =>
+    set((state) => ({
+      students: state.students.map((student) =>
+        student.id === id ? { ...student, ...updates } : student
+      ),
+    })),
+
+  deleteStudent: (id) =>
+    set((state) => ({
+      students: state.students.filter((student) => student.id !== id),
+    })),
+
+  loadStudentsFromDb: async () => {
+    set({ isLoading: true, syncError: null });
+    
+    try {
+      const response = await fetch('/api/students');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to load students');
+      }
+
+      set({
+        students: result.data,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        syncError: error instanceof Error ? error.message : 'Unknown error occurred',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  syncStudentsFromSheets: async () => {
     set({ isSyncing: true, syncError: null });
     
     try {
@@ -66,17 +117,33 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
         throw new Error(result.error?.message || 'Failed to sync students');
       }
 
-      set({
-        students: result.data.students,
-        lastSyncTime: new Date(),
-        isSyncing: false,
-      });
+      // Only add new students to the existing list without reloading everything
+      if (result.data.newStudents && result.data.newStudents.length > 0) {
+        set((state) => ({
+          students: [...state.students, ...result.data.newStudents].sort((a, b) => {
+            // Sort by grade first, then by name
+            if (a.grade !== b.grade) {
+              return a.grade - b.grade;
+            }
+            return a.name.localeCompare(b.name);
+          }),
+          lastSyncTime: new Date(),
+          isSyncing: false,
+        }));
+      } else {
+        // No new students, just update sync time
+        set({
+          lastSyncTime: new Date(),
+          isSyncing: false,
+        });
+      }
     } catch (error) {
       set({
         syncError: error instanceof Error ? error.message : 'Unknown error occurred',
         isSyncing: false,
       });
-      throw error;
+      // Don't throw error for background sync - just log it
+      console.error('Background sync failed:', error);
     }
   },
 
@@ -100,13 +167,13 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
   // Filtering Actions
   setSearchQuery: (query) => set({ searchQuery: query }),
   setGradeFilter: (grade) => set({ gradeFilter: grade }),
-  setSubjectFilter: (subject) => set({ subjectFilter: subject }),
+  setBucketFilter: (bucket) => set({ bucketFilter: bucket }),
   clearFilters: () =>
-    set({ searchQuery: '', gradeFilter: null, subjectFilter: 'all' }),
+    set({ searchQuery: '', gradeFilter: null, bucketFilter: null }),
 
   // Computed
   getFilteredStudents: () => {
-    const { students, searchQuery, gradeFilter, subjectFilter } = get();
+    const { students, searchQuery, gradeFilter, bucketFilter } = get();
 
     return students.filter((student) => {
       // Search filter
@@ -122,12 +189,9 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
         return false;
       }
 
-      // Subject filter
-      if (subjectFilter !== 'all') {
-        const hasSubjectScore = student.scores[subjectFilter];
-        if (!hasSubjectScore) {
-          return false;
-        }
+      // Bucket filter
+      if (bucketFilter !== null && student.bucket !== bucketFilter) {
+        return false;
       }
 
       return true;

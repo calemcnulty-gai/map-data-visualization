@@ -400,9 +400,14 @@ export function MapVisualization({
         <div style={{ fontSize: FONTS.sizes.small }}>
           Generated on {new Date().toLocaleDateString()}
         </div>
-        <div style={{ fontSize: FONTS.sizes.small }}>
-          © NextGen Academy • www.nextgenafter.school
-        </div>
+        <img 
+          src="/logo.png" 
+          alt="NextGen Academy" 
+          style={{
+            height: dimensions.footerHeight * 0.7,
+            objectFit: 'contain',
+          }}
+        />
       </div>
     </div>
   );

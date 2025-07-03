@@ -5,32 +5,8 @@
 
 import { Student, TutoringPackage } from './student';
 
-/** Available visualization templates */
-export type VisualizationTemplate = 
-  | 'performance-overview'    // Default - shows current performance and all projections
-  | 'improvement-focus'       // Emphasizes improvement potential
-  | 'comparative-analysis';   // Compares packages side-by-side
-
-/** Template-specific configuration */
-export interface TemplateConfig {
-  id: VisualizationTemplate;
-  name: string;
-  description: string;
-  defaultConfig: Partial<VisualizationConfig>;
-  features: {
-    showCurrentPerformance: boolean;
-    showProjections: boolean;
-    showPeerComparison: boolean;
-    showGradeTargets: boolean;
-    show90thTargets: boolean;
-    emphasizeImprovement: boolean;
-    comparePackages: boolean;
-  };
-}
-
 /** Configuration for visualization generation */
 export interface VisualizationConfig {
-  template: VisualizationTemplate;
   includeProjections: boolean;
   packages: TutoringPackage[];
   colorScheme: 'default' | 'high-contrast';
@@ -127,7 +103,6 @@ export interface TargetData {
 
 /** Default visualization configuration */
 export const DEFAULT_VISUALIZATION_CONFIG: VisualizationConfig = {
-  template: 'performance-overview',
   includeProjections: true,
   packages: ['10-hour', '20-hour', '40-hour'],
   colorScheme: 'default',
@@ -136,74 +111,4 @@ export const DEFAULT_VISUALIZATION_CONFIG: VisualizationConfig = {
   includePeerComparison: true,
   includeGradeLevelTargets: true,
   include90thPercentileTargets: true,
-};
-
-/** Visualization template definitions */
-export const VISUALIZATION_TEMPLATES: Record<VisualizationTemplate, TemplateConfig> = {
-  'performance-overview': {
-    id: 'performance-overview',
-    name: 'Performance Overview',
-    description: 'Complete view of current performance and improvement projections',
-    defaultConfig: {
-      includeProjections: true,
-      packages: ['10-hour', '20-hour', '40-hour'],
-      includeCurrentPerformance: true,
-      includePeerComparison: true,
-      includeGradeLevelTargets: true,
-      include90thPercentileTargets: true,
-    },
-    features: {
-      showCurrentPerformance: true,
-      showProjections: true,
-      showPeerComparison: true,
-      showGradeTargets: true,
-      show90thTargets: true,
-      emphasizeImprovement: false,
-      comparePackages: false,
-    },
-  },
-  'improvement-focus': {
-    id: 'improvement-focus',
-    name: 'Improvement Focus',
-    description: 'Emphasizes potential improvement with tutoring packages',
-    defaultConfig: {
-      includeProjections: true,
-      packages: ['10-hour', '20-hour', '40-hour'],
-      includeCurrentPerformance: true,
-      includePeerComparison: false,
-      includeGradeLevelTargets: true,
-      include90thPercentileTargets: true,
-    },
-    features: {
-      showCurrentPerformance: true,
-      showProjections: true,
-      showPeerComparison: false,
-      showGradeTargets: true,
-      show90thTargets: true,
-      emphasizeImprovement: true,
-      comparePackages: false,
-    },
-  },
-  'comparative-analysis': {
-    id: 'comparative-analysis',
-    name: 'Package Comparison',
-    description: 'Side-by-side comparison of tutoring package outcomes',
-    defaultConfig: {
-      includeProjections: true,
-      packages: ['10-hour', '20-hour', '40-hour'],
-      includeCurrentPerformance: true,
-      includePeerComparison: false,
-      includeGradeLevelTargets: false,
-      include90thPercentileTargets: false,
-    },
-    features: {
-      showCurrentPerformance: true,
-      showProjections: true,
-      showPeerComparison: false,
-      showGradeTargets: false,
-      show90thTargets: false,
-      emphasizeImprovement: false,
-      comparePackages: true,
-    },
-  },
 }; 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the complete user journey through the MAP Data Visualization Tool, from initial access to final visualization export. The flow is designed for NextGen Academy staff members who need to generate compelling visualizations for parent communications.
+This document outlines the complete user journey through the MAP Data Visualization Tool, from initial access to final visualization export. The flow is designed for NextGen Academy staff members who need to manage student MAP test data and generate compelling visualizations for parent communications.
 
 ---
 
@@ -10,230 +10,140 @@ This document outlines the complete user journey through the MAP Data Visualizat
 
 ### Primary User: NextGen Academy Staff
 - **Role**: Tutors, enrollment specialists, academic advisors
-- **Goal**: Generate professional visualizations to demonstrate tutoring value to parents
+- **Goal**: Manage student data and generate professional visualizations to demonstrate tutoring value to parents
 - **Technical Level**: Basic to intermediate computer skills
 - **Access**: Authorized @esports.school or @superbuilders.school email accounts
 
 ---
 
-## Entry Points
+## User Journey Map
 
-### 1. Direct URL Access
-- User navigates directly to the application URL
-- Redirected to authentication if not logged in
+### 1. Initial Access
+**User Goal**: Access the MAP data visualization tool
 
-### 2. Email Link
-- User clicks link from internal communication
-- Directed to specific functionality if authenticated
+**Steps**:
+1. Navigate to the application URL
+2. Sign in with Google account (NextGen email)
+3. Land on main dashboard
 
-### 3. Bookmark/Saved Link
-- Returning users access via saved bookmark
-- Session persistence maintains authentication state
+**System Actions**:
+- Authenticate via Google OAuth
+- Load user permissions
+- Fetch initial data from database
 
----
+### 2. Student Management
+**User Goal**: View and manage student data
 
-## Authentication Flow
+**Steps**:
+1. View student list on dashboard
+2. Search/filter students by:
+   - Name
+   - Grade level
+   - Student type (Tournament/Prospective)
+3. Add new student with MAP scores
+4. Edit existing student data
+5. Delete students
 
-### Initial Login
-1. **Landing Page**
-   - Brief application description
-   - "Sign in with Google" button prominently displayed
-   - NextGen Academy branding
+**System Actions**:
+- Display paginated student list
+- Real-time search filtering
+- CRUD operations on database
+- Auto-calculate percentiles from RIT scores
 
-2. **Google OAuth Flow**
-   - Click "Sign in with Google"
-   - Redirect to Google authentication
-   - Select authorized account (@esports.school or @superbuilders.school)
-   - Grant necessary permissions (Google Sheets access)
+### 3. Data Synchronization
+**User Goal**: Import student data from Google Sheets
 
-3. **Authentication Validation**
-   - System verifies email domain
-   - If unauthorized: Display error message with contact information
-   - If authorized: Redirect to main dashboard
+**Steps**:
+1. Click "Sync from Sheets" button
+2. System imports data from configured sheet
+3. View sync status and results
 
-### Session Management
-- **Active Session**: Direct access to dashboard
-- **Session Duration**: Extended (1 year or maximum configurable)
-- **Persistent Login**: No automatic timeouts for internal use
-- **Logout**: Manual logout clears session and returns to landing page
+**System Actions**:
+- Connect to Google Sheets API
+- Parse and validate data
+- Update database with new/changed records
+- Display sync progress and errors
 
----
+### 4. Visualization Generation
+**User Goal**: Create performance visualizations for students
 
-## Main Dashboard
+**Steps**:
+1. Click on a student from the list
+2. Select subject from dropdown
+3. View real-time preview
+4. Click "Download PNG" to save
 
-### Initial View
-1. **Welcome Header**
-   - User name display
-   - Logout option
-   - NextGen Academy logo
-
-2. **Data Status Indicator**
-   - Connection status to Google Sheets
-   - Last sync timestamp
-   - Refresh data button
-
-3. **Student Selection Interface**
-   - Search/filter functionality
-   - Student list with key metrics preview
-   - Multi-select capability for batch processing
-
-### Navigation Elements
-- **Generate Visualization** (primary action)
-- **Visualization History** (access all previous generations)
-- **Logout** (end session)
+**System Actions**:
+- Navigate to visualization page
+- Generate chart with D3.js
+- Render performance data
+- Export as PNG file
 
 ---
 
-## Visualization Generation Flow
+## Key Features
 
-### Step 1: Student Selection
-1. **Search Options**
-   - Search by student name
-   - Filter by grade level
-   - Filter by subject
-   - Filter by performance range
+### Student Data Table
+- **Search**: Real-time filtering by student name
+- **Filters**: Grade level and student type
+- **Actions**: Edit and delete per student
+- **Navigation**: Click row to generate visualization
 
-2. **Selection Methods**
-   - Single student selection
-   - Multiple student selection (batch mode)
-   - Select all in filtered results
+### Visualization Options
+- **Subject Selection**: Dropdown for Math, Reading, Language, Science
+- **Preview**: Real-time chart preview
+- **Download**: High-quality PNG export
 
-3. **Selection Confirmation**
-   - Display selected student(s) summary
-   - Show available data completeness
-   - Option to modify selection
-
-### Step 2: Visualization Configuration
-1. **Template Selection**
-   - Standard performance overview
-   - Improvement projection focus
-   - Comparative analysis
-   - Custom configuration
-
-2. **Data Points Selection**
-   - Current performance metrics (default: on)
-   - Peer comparison (default: on)
-   - Improvement projections (default: all packages)
-   - Grade level targets (default: on)
-   - 90th percentile targets (default: on)
-
-3. **Customization Options**
-   - Include/exclude specific tutoring packages
-   - Add custom messaging
-   - Select color scheme variant
-   - Choose layout orientation
-
-### Step 3: Preview & Generate
-1. **Live Preview**
-   - Real-time visualization preview
-   - Responsive preview size adjustment
-   - Data accuracy verification
-   - Visual quality check
-
-2. **Adjustments**
-   - Modify included data points
-   - Adjust visual emphasis
-   - Update student information if needed
-   - Return to previous steps
-
-3. **Final Generation**
-   - Click "Generate PNG"
-   - Processing indicator
-   - Quality selection (email-optimized vs. print quality)
-
-### Step 4: Export & Distribution
-1. **Download Options**
-   - Individual PNG files (single student)
-   - ZIP archive (multiple students)
-   - Copy shareable link
-
-2. **File Naming**
-   - Automatic: StudentName_Subject_Date.png
-   - Custom naming option available
-
-3. **Next Actions**
-   - Generate for another student
-   - Return to dashboard
-   - View in visualization history
-   
-4. **Automatic History Storage**
-   - All generated visualizations saved automatically
-   - Accessible from Visualization History
-   - Organized by date and student name
+### Data Management
+- **Add Student**: Modal form with RIT score inputs
+- **Edit Student**: Update existing student data
+- **Delete Student**: Remove with confirmation
+- **Sync**: Import from Google Sheets
 
 ---
 
-## Additional Workflows
+## Technical Flow
 
-### Visualization History Flow
-1. **Access History**
-   - Click "Visualization History" from main navigation
-   - View chronologically ordered list of all generated visualizations
+### Authentication Flow
+```
+User → Google OAuth → JWT Session → Dashboard Access
+```
 
-2. **History Interface**
-   - Search by student name
-   - Filter by date range
-   - Filter by subject
-   - Sort by date (newest/oldest)
+### Data Flow
+```
+Google Sheets → Sync API → PostgreSQL → Dashboard → Visualizations
+```
 
-3. **History Item Details**
-   - Student name and subject
-   - Generation date and time
-   - Thumbnail preview
-   - Download original PNG
-   - Regenerate with current data
-
-4. **History Actions**
-   - Download individual visualization
-   - Download multiple (select and batch download)
-   - Delete old visualizations (if needed)
-   - Duplicate and modify settings
-
-### Data Refresh Flow
-1. User notices outdated data indicator
-2. Click "Refresh Data" button
-3. System syncs with Google Sheets
-4. Progress indicator shows sync status
-5. Confirmation of successful update
-6. Student list refreshes automatically
-
-### Batch Processing Flow (Secondary Feature)
-1. Select multiple students from list
-2. Choose "Batch Generate" option
-3. Select common visualization settings
-4. System generates all visualizations
-5. Download as ZIP archive
-6. All visualizations saved to history
-
-### Error Handling Flow
-1. **Data Sync Errors**
-   - Clear error message
-   - Retry option
-   - Contact support link
-
-2. **Generation Errors**
-   - Specific error details
-   - Partial success handling
-   - Recovery suggestions
-
-3. **Authentication Errors**
-   - Session timeout notification
-   - Quick re-authentication
-   - Preserve work state when possible
+### Visualization Flow
+```
+Select Student → Choose Subject → Generate Chart → Download PNG
+```
 
 ---
 
-## Exit Points
+## Error Handling
 
-### Successful Completion
-1. Download completed visualizations
-2. Optional: Email confirmation
-3. Return to dashboard or logout
+### Common Error Scenarios
+1. **Sync Failures**
+   - Network errors
+   - Invalid data format
+   - Permission issues
 
-### Manual Logout
-1. Confirm logout action
-2. Clear session data
-3. Return to landing page
+2. **Visualization Errors**
+   - Missing student data
+   - Invalid scores
+   - Generation failures
+
+3. **Authentication Issues**
+   - Expired sessions
+   - Invalid credentials
+   - Permission denied
+
+### User Feedback
+- Loading states during operations
+- Error messages with clear actions
+- Success confirmations
+- Progress indicators for long operations
 
 ---
 
@@ -258,20 +168,4 @@ This document outlines the complete user journey through the MAP Data Visualizat
 - **Screen Reader Support**: Proper ARIA labels
 - **High Contrast Mode**: Alternative color schemes
 - **Text Scaling**: Responsive to browser zoom
-- **Clear Error Messages**: Descriptive, actionable feedback
-
----
-
-## Performance Optimizations
-
-### Loading States
-- Progressive data loading
-- Skeleton screens during fetch
-- Cached student lists
-- Lazy loading for large datasets
-
-### User Feedback
-- Clear progress indicators
-- Estimated time for operations
-- Cancel options for long processes
-- Background processing notifications 
+- **Clear Error Messages**: Descriptive, actionable feedback 

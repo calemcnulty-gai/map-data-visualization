@@ -43,7 +43,8 @@ map-data-visualization/
 │   ├── types/                # TypeScript type definitions
 │   └── utils/                # General utilities
 ├── services/                 # External service integrations
-│   ├── google-sheets/        # Google Sheets API
+│   ├── database/             # Database service layer
+│   ├── import/               # Data import services (CSV, Google Sheets)
 │   ├── image-generation/     # PNG generation service
 │   └── storage/              # File storage service
 ├── stores/                   # Zustand state stores
@@ -84,16 +85,16 @@ map-data-visualization/
 #### Components
 ```
 components/
-├── student-selector.tsx       # Component file
-├── student-selector.test.tsx  # Test file (if any)
-└── student-selector.module.css # Component-specific styles
+├── student-form.tsx           # Component file
+├── student-form.test.tsx      # Test file (if any)
+└── student-form.module.css    # Component-specific styles
 ```
 
 #### API Routes
 ```
 app/api/
 ├── auth/[...nextauth]/route.ts    # NextAuth handler
-├── sheets/sync/route.ts            # Specific endpoint
+├── students/[id]/route.ts          # RESTful student endpoints
 └── visualizations/generate/route.ts # Clear action naming
 ```
 
@@ -102,7 +103,7 @@ app/api/
 lib/
 ├── calculate-rit-improvement.ts    # Single-purpose function
 ├── format-student-data.ts          # Data transformation
-└── validate-email-domain.ts        # Validation utility
+└── validate-student-input.ts       # Validation utility
 ```
 
 #### Types
@@ -123,32 +124,32 @@ lib/types/
 #### React Components
 ```typescript
 /**
- * @fileoverview Student selector component for choosing students from the synced data
- * @module components/student-selector
+ * @fileoverview Student form component for creating and editing student records
+ * @module components/student-form
  */
 
 import { useState, useCallback } from 'react';
 import { Student } from '@/lib/types';
 
-interface StudentSelectorProps {
-  /** List of available students */
-  students: Student[];
-  /** Callback when selection changes */
-  onSelectionChange: (selected: Student[]) => void;
-  /** Allow multiple selection */
-  multiSelect?: boolean;
+interface StudentFormProps {
+  /** Existing student data for editing */
+  student?: Student;
+  /** Callback when form is submitted */
+  onSubmit: (data: Student) => void;
+  /** Callback when form is cancelled */
+  onCancel: () => void;
 }
 
 /**
- * Component for selecting students from the synchronized Google Sheets data
- * @param {StudentSelectorProps} props - Component properties
- * @returns {JSX.Element} Rendered student selector
+ * Form component for creating and editing student records
+ * @param {StudentFormProps} props - Component properties
+ * @returns {JSX.Element} Rendered student form
  */
-export function StudentSelector({ 
-  students, 
-  onSelectionChange,
-  multiSelect = false 
-}: StudentSelectorProps) {
+export function StudentForm({ 
+  student, 
+  onSubmit,
+  onCancel 
+}: StudentFormProps) {
   // Component implementation
 }
 ```
@@ -232,7 +233,14 @@ export interface Student {
   id: string;
   name: string;
   grade: number;
-  scores: SubjectScores;
+  age?: number;
+  mathRitScore: number;
+  mathPercentile: number;
+  readingRitScore: number;
+  readingPercentile: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /** Union of possible tutoring packages */
@@ -258,11 +266,14 @@ export interface VisualizationConfig {
 
 ### Route Naming
 ```
-GET    /api/sheets/sync          # Sync data from Google Sheets
 GET    /api/students             # Get all students
 GET    /api/students/[id]        # Get specific student
+POST   /api/students             # Create new student
+PUT    /api/students/[id]        # Update student
+DELETE /api/students/[id]        # Delete student
 POST   /api/visualizations       # Generate visualization
 GET    /api/visualizations/[id]  # Get generated visualization
+POST   /api/import/csv           # Import students from CSV
 ```
 
 ### Response Format
@@ -294,20 +305,26 @@ GET    /api/visualizations/[id]  # Get generated visualization
 
 ### Zustand Store Organization
 ```typescript
-// stores/visualization-store.ts
-interface VisualizationStore {
+// stores/student-store.ts
+interface StudentStore {
   // State
-  selectedStudents: Student[];
-  config: VisualizationConfig;
+  students: Student[];
+  selectedStudent: Student | null;
+  loading: boolean;
   
   // Actions (grouped by feature)
+  // CRUD actions
+  addStudent: (student: Student) => void;
+  updateStudent: (id: string, updates: Partial<Student>) => void;
+  deleteStudent: (id: string) => void;
+  
   // Selection actions
-  setSelectedStudents: (students: Student[]) => void;
+  setSelectedStudent: (student: Student | null) => void;
   clearSelection: () => void;
   
-  // Config actions
-  updateConfig: (partial: Partial<VisualizationConfig>) => void;
-  resetConfig: () => void;
+  // Data actions
+  fetchStudents: () => Promise<void>;
+  setLoading: (loading: boolean) => void;
 }
 ```
 
@@ -362,7 +379,7 @@ interface VisualizationStore {
 
 ### Branch Naming
 ```
-feature/student-selection
+feature/student-management
 fix/calculation-error
 chore/update-dependencies
 docs/api-documentation
@@ -370,11 +387,11 @@ docs/api-documentation
 
 ### Commit Messages
 ```
-feat: add student multi-select functionality
+feat: add student CRUD operations
 fix: correct RIT score calculation for edge cases
 chore: update Next.js to version 14.1
-docs: add API endpoint documentation
-refactor: split visualization component into smaller parts
+docs: add student API endpoint documentation
+refactor: split student form into smaller components
 ```
 
 ---
@@ -385,7 +402,7 @@ refactor: split visualization component into smaller parts
 ```
 # Public variables (exposed to client)
 NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_GOOGLE_SHEETS_ID=
+NEXT_PUBLIC_MAX_FILE_SIZE=
 
 # Server-only variables
 GOOGLE_CLIENT_ID=
@@ -411,15 +428,15 @@ STORAGE_PATH=
 
 ### Test Organization
 ```typescript
-describe('StudentSelector', () => {
-  describe('single selection mode', () => {
-    it('should select only one student at a time', () => {
+describe('StudentForm', () => {
+  describe('creation mode', () => {
+    it('should validate required fields', () => {
       // Test implementation
     });
   });
   
-  describe('multi-selection mode', () => {
-    it('should allow multiple students to be selected', () => {
+  describe('edit mode', () => {
+    it('should populate fields with existing data', () => {
       // Test implementation
     });
   });

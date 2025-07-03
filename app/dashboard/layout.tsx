@@ -37,9 +37,6 @@ export default async function DashboardLayout({
               <Link href="/dashboard" className="text-sm font-medium hover:text-primary">
                 Students
               </Link>
-              <Link href="/dashboard/history" className="text-sm font-medium hover:text-primary">
-                History
-              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
