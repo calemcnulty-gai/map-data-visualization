@@ -21,6 +21,7 @@ import {
   estimateNewPercentile,
   getRITForPercentile,
 } from '@/lib/calculations/rit-improvement';
+import { formatPercentileForParents } from '@/lib/utils';
 
 interface StudentPerformanceChartProps {
   data: ChartData;
@@ -198,7 +199,7 @@ export function StudentPerformanceChart({
           for (const p of percentiles) {
             const ritForP = getRITForPercentile(p, data.gradeLevel);
             if (Math.abs(ritForP - Number(d)) < 3) {
-              return `${p}%`;
+              return formatPercentileForParents(p);
             }
           }
           return '';
@@ -256,7 +257,7 @@ export function StudentPerformanceChart({
         .style('font-size', `${FONTS.sizes.body}px`)
         .style('font-weight', FONTS.weights.medium)
         .style('fill', BRAND_COLORS.gray[600])
-        .text('Percentile');
+        .text('Performance Level');
 
       // Draw bars
       const bars = g.selectAll('.bar').data(allScores);
@@ -296,13 +297,13 @@ export function StudentPerformanceChart({
         .enter()
         .append('text')
         .attr('x', (d) => xScale(d.label)! + xScale.bandwidth() / 2)
-        .attr('y', chartHeight - CHART_SETTINGS.margins.bottom + 45)
+        .attr('y', chartHeight - CHART_SETTINGS.margins.bottom + 55)
         .attr('text-anchor', 'middle')
         .style('font-family', FONTS.primary)
         .style('font-size', `${FONTS.sizes.small}px`)
         .style('font-weight', FONTS.weights.medium)
         .style('fill', BRAND_COLORS.gray[600])
-        .text((d) => d.percentile ? `${d.percentile}%ile` : '');
+        .text((d) => d.percentile ? formatPercentileForParents(d.percentile) : '');
 
       // Add target lines if enabled
       if (showTargets && data.targets) {
@@ -324,7 +325,7 @@ export function StudentPerformanceChart({
           .style('font-size', `${FONTS.sizes.small}px`)
           .style('font-weight', FONTS.weights.bold)
           .style('fill', CHART_COLORS.target)
-          .text('Grade Level (50th %ile)');
+          .text('Grade Level (Top 50%)');
 
         // 90th percentile target line
         g.append('line')
@@ -344,7 +345,7 @@ export function StudentPerformanceChart({
           .style('font-size', `${FONTS.sizes.small}px`)
           .style('font-weight', FONTS.weights.bold)
           .style('fill', BRAND_COLORS.primary)
-          .text('90th Percentile Target');
+          .text('Mastery (Top 10%)');
       }
 
       // Add improvement indicators
@@ -373,7 +374,7 @@ export function StudentPerformanceChart({
       <svg
         ref={svgRef}
         width={dimensions.width}
-        height={dimensions.height}
+        height={chartHeight + dimensions.headerHeight + dimensions.padding}
         style={{ backgroundColor: 'white' }}
       />
     </div>

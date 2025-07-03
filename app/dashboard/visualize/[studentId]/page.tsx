@@ -58,6 +58,13 @@ export default function VisualizePage() {
     loadStudent();
   }, [studentId, student, students.length, syncStudents, selectStudent, selectedStudents]);
 
+  // Redirect if student not found after loading
+  useEffect(() => {
+    if (!isLoading && !student) {
+      router.push('/dashboard');
+    }
+  }, [isLoading, student, router]);
+
   // Loading state
   if (isLoading) {
     return (
@@ -69,9 +76,8 @@ export default function VisualizePage() {
     );
   }
 
-  // Redirect if student not found
+  // Return null while redirecting
   if (!student) {
-    router.push('/dashboard');
     return null;
   }
 
@@ -184,23 +190,6 @@ export default function VisualizePage() {
           </Button>
           <h1 className="text-2xl font-bold">Generate Visualization</h1>
         </div>
-        <Button
-          onClick={handleDownload}
-          disabled={!hasSubjectData || isGenerating}
-          className="gap-2 bg-nextgen-green hover:bg-nextgen-green/90"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Download className="h-4 w-4" />
-              Download PNG
-            </>
-          )}
-        </Button>
       </div>
 
       {/* Configuration Panel */}
@@ -343,12 +332,33 @@ export default function VisualizePage() {
 
       {/* Visualization Preview */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Preview</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Preview</h2>
+          {hasSubjectData && (
+            <Button
+              onClick={handleDownload}
+              disabled={!hasSubjectData || isGenerating}
+              className="gap-2 bg-nextgen-green hover:bg-nextgen-green/90"
+              size="sm"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Download PNG
+                </>
+              )}
+            </Button>
+          )}
+        </div>
         {hasSubjectData ? (
           <div 
             ref={visualizationRef} 
-            className="flex justify-center overflow-auto"
-            style={{ maxHeight: '80vh' }}
+            className="flex justify-center"
           >
             <MapVisualization
               student={student}

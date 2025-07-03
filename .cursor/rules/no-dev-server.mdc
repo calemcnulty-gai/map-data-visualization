@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+The dev server is running externally. Don't try to run it yourself unless you are debugging issues with the dev server.

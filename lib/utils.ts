@@ -16,4 +16,23 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Convert percentile to parent-friendly format
+ * @param percentile - The percentile value (1-99)
+ * @returns Formatted string like "Top X% or "Bottom X%"
+ */
+export function formatPercentileForParents(percentile: number): string {
+  if (percentile >= 50) {
+    // For 50th percentile and above, show as "Top X%"
+    const topPercent = 100 - percentile;
+    if (topPercent === 0) {
+      return 'Top 1%';
+    }
+    return `Top ${topPercent}%`;
+  } else {
+    // For below 50th percentile, show as "Bottom X%"
+    return `Bottom ${percentile}%`;
+  }
 } 

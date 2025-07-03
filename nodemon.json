@@ -1,0 +1,22 @@
+{
+  "watch": [
+    "app",
+    "components",
+    "lib",
+    "services",
+    "stores",
+    "styles"
+  ],
+  "ext": "ts,tsx,js,jsx,json,css",
+  "ignore": [
+    ".next/*",
+    "node_modules/*",
+    "public/*",
+    ".git/*"
+  ],
+  "exec": "next dev",
+  "env": {
+    "NODE_ENV": "development",
+    "FORCE_COLOR": "1"
+  }
+} 

@@ -1,5 +1,36 @@
 # MAP Data Visualization Tool - Changelog
 
+## 2025-01-07 - API Validation Fix & Preview Display Enhancement
+
+### Fixed
+- **Visualization API**: Fixed 400 Bad Request error when downloading visualizations for language and science subjects
+  - Updated validation schema in `/api/visualizations/route.ts` to include all four subjects: math, reading, language, and science
+  - Previously only math and reading were allowed in the subject enum validation
+  - This was preventing successful PNG generation and download for language and science visualizations
+
+- **Preview Display**: Improved visualization preview to display at natural height
+  - Removed `overflow-auto` class and `maxHeight: '80vh'` style from preview container
+  - Preview now displays the full visualization without scrolling
+  - Visualization maintains its designed dimensions (800x1000px portrait, 1200x800px landscape)
+
+- **SVG Height Optimization**: Fixed excessive white space in visualization charts
+  - MapVisualization component now uses flexible height based on content instead of fixed dimensions
+  - Changed footer from absolute to relative positioning with flexbox layout
+  - StudentPerformanceChart SVG height now calculated based on actual chart content (chartHeight + headerHeight + padding)
+  - Eliminates unnecessary white space below chart content while maintaining proper layout
+
+- **React Render Error**: Fixed "Cannot update Router while rendering VisualizePage" error
+  - Moved redirect logic from render phase into useEffect hook
+  - Prevents setState during render which was causing React warnings
+  - Properly handles student not found scenario with clean redirect to dashboard
+
+### UI Improvements
+- **Download Button Repositioning**: Moved download PNG button to preview card
+  - Relocated from page header to top right corner of the preview section
+  - Button now appears next to the "Preview" heading for better context
+  - Only shows when subject data is available
+  - Uses smaller button size to fit better in the card header
+
 ## 2024-07-03 - Environment File Loading Fix
 
 ### Fixed
@@ -490,6 +521,37 @@ Phase 3 will focus on:
   - Reduced chart height from 420px to 380px to prevent footer overlap
   - Reduced bottom margin from 80px to 70px
   - Reduced gaps between info boxes for better space utilization 
+
+### Parent-Friendly Percentile Formatting
+- Replaced percentile notation with more intuitive parent-friendly format:
+  - Percentiles ≥50 shown as "Top X%" (e.g., 90th percentile = "Top 10%")
+  - Percentiles <50 shown as "Bottom X%" (e.g., 25th percentile = "Bottom 25%")
+  - 50th percentile shown as "Top 50%" to maintain positive framing
+- Updated all percentile displays in visualizations:
+  - "Percentile Rank" info box changed to "Performance Level"
+  - Chart bar labels now show "Top X%" or "Bottom X%"
+  - Right axis label changed from "Percentile" to "Performance Level"
+  - Grade level target line now shows "Grade Level (Top 50%)"
+  - 90th percentile target changed to "Mastery (Top 10%)"
+  - "Hours to 90th %ile" changed to "Hours to Mastery"
+- Created `formatPercentileForParents()` utility function for consistent formatting
+
+### Chart Label Spacing Fix
+- Increased vertical spacing between x-axis labels and percentile labels below bars
+- Changed y-position offset from +45 to +55 pixels for better readability
+- Prevents overlap between labels like "Current" and "Bottom 9%"
+
+### Hot Reloading Improvements
+- Enhanced Next.js configuration for better hot module replacement
+- Added webpack watch options with polling for file change detection
+- Configured onDemandEntries for improved page buffering
+- Added nodemon as dev dependency for file watching
+- Created multiple dev scripts:
+  - `npm run dev`: Standard Next.js development server
+  - `npm run dev:clean`: Clears .next cache before starting
+  - `npm run dev:watch`: Uses nodemon for enhanced file watching
+- Fixed module resolution issues that were causing hot reload failures
+- Removed experimental turbo mode that was causing compatibility issues
 
 ## 2025-01-03
 - Fixed authOptions export issue by creating a separate auth-options.ts file

@@ -14,7 +14,7 @@ import { z } from 'zod';
 const createVisualizationSchema = z.object({
   studentId: z.string(),
   studentName: z.string(),
-  subject: z.enum(['math', 'reading']),
+  subject: z.enum(['math', 'reading', 'language', 'science']),
   grade: z.number(),
   config: z.object({
     includeProjections: z.boolean(),

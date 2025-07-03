@@ -22,6 +22,7 @@ import {
   VISUALIZATION_DIMENSIONS,
   FONTS,
 } from '@/lib/constants/visualization';
+import { formatPercentileForParents } from '@/lib/utils';
 
 interface MapVisualizationProps {
   student: Student;
@@ -118,10 +119,11 @@ export function MapVisualization({
       className="map-visualization"
       style={{
         width: dimensions.width,
-        height: dimensions.height,
         backgroundColor: 'white',
         position: 'relative',
         fontFamily: FONTS.primary,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Header */}
@@ -229,7 +231,7 @@ export function MapVisualization({
                 marginBottom: 4,
               }}
             >
-              Percentile Rank
+              Performance Level
             </div>
             <div
               style={{
@@ -238,7 +240,7 @@ export function MapVisualization({
                 color: BRAND_COLORS.secondary,
               }}
             >
-              {score.percentile}%
+              {formatPercentileForParents(score.percentile)}
             </div>
           </div>
 
@@ -313,7 +315,7 @@ export function MapVisualization({
                 marginBottom: 4,
               }}
             >
-              Hours to 90th %ile
+              Hours to Mastery
             </div>
             <div
               style={{
@@ -385,10 +387,6 @@ export function MapVisualization({
       {/* Footer */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           height: dimensions.footerHeight,
           backgroundColor: BRAND_COLORS.secondary,
           color: 'white',
@@ -396,6 +394,7 @@ export function MapVisualization({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: `0 ${dimensions.padding}px`,
+          marginTop: 'auto',
         }}
       >
         <div style={{ fontSize: FONTS.sizes.small }}>
