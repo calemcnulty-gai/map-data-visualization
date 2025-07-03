@@ -123,6 +123,13 @@ The foundation is solid and ready for core functionality implementation once dat
 - Created server setup script (setup-server.sh) to install PM2 and prepare environment
 - Configured reverse proxy setup to run Next.js app on port 3000
 
+### Production Build Preparation
+- Fixed all TypeScript errors preventing build
+- Moved authOptions to separate file to fix Next.js 15 route requirements
+- Fixed unused variables and parameters throughout codebase
+- Updated D3.js type annotations
+- Successfully completed production build with only warnings
+
 ### Next Steps
 - Run setup-server.sh to prepare the server
 - Deploy application using deploy.sh
@@ -359,7 +366,27 @@ Phase 3 will focus on:
 - Added support for science scores in addition to math and reading
 - Refactored client to aggregate multiple subject rows per student into a single Student object
 - Updated types to include science in SubjectScores and StudentWithProjections interfaces
-- Parser now correctly identifies that current data only contains math scores 
+- Parser now correctly identifies that current data only contains math scores
+
+### 2025-01-07 (Subject Support Enhancement)
+- **Added Full Subject Support**: Extended system to support Language, Reading, and Science in addition to Math
+- **Implemented Percentile Calculator**: Created comprehensive percentile calculation from RIT score and grade alone
+  - Added complete lookup tables from RIT Score Calculations document
+  - Created `getPercentileFromRIT` function for accurate percentile determination
+  - Updated Google Sheets client to calculate percentile when not provided
+- **Updated UI Components**:
+  - Student data table now shows all four subjects in compact format (RIT score + percentile)
+  - Subject filter dropdown includes all subjects
+  - Visualization pages support subject selection for all four subjects
+  - Batch processing supports generating visualizations for all subjects
+- **Enhanced Calculations**:
+  - All RIT improvement functions now support all four subjects
+  - Percentile calculations use accurate lookup tables instead of approximations
+  - Grade-based percentile calculations for more accurate projections
+- **Created Lookup Tables**:
+  - Comprehensive percentile by grade and RIT score table (1-99 percentiles, grades K-12)
+  - RIT to R50 (Knows Half of Curriculum) conversion table
+  - Binary search implementation for efficient lookups 
 
 ### 2025-01-03
 - Fixed database connection issues
@@ -449,3 +476,35 @@ Phase 3 will focus on:
   - Reduced chart height from 420px to 380px to prevent footer overlap
   - Reduced bottom margin from 80px to 70px
   - Reduced gaps between info boxes for better space utilization 
+
+## 2025-01-03
+- Fixed authOptions export issue by creating a separate auth-options.ts file
+- Updated all imports to use the new centralized auth configuration
+- Resolved TypeScript errors related to NextAuth configuration
+
+## 2025-01-02
+- Set up PostgreSQL database on production server (nextgenafter.school)
+  - Installed PostgreSQL 16
+  - Created database: map_data_visualization
+  - Created user: mapviz with secure password
+  - Granted necessary permissions (CREATE, USAGE on public schema)
+  - Successfully ran Prisma migrations
+  - Generated Prisma client on server
+  - Database is now ready for production use at /var/www/map-data-visualization
+
+- Resized EC2 instance (i-0c5c8ae4300e98b6d) for better performance:
+  - Upgraded from t3.micro to t3.large (1GB → 8GB RAM)
+  - Increased storage to 200GB
+  - Maintained static IP (34.205.10.11)
+  - Server successfully restarted with new specifications
+
+- Fixed HTTPS configuration for visualizations.nextgenafter.school:
+  - Updated nginx configuration to use SSL certificate
+  - Added HTTP to HTTPS redirect
+  - SSL certificate already existed (valid until 2025-10-01)
+  - Site now accessible at https://visualizations.nextgenafter.school
+
+- Deployed application successfully:
+  - Built and deployed Next.js application
+  - PM2 process manager configured and running
+  - Application is live and accessible 

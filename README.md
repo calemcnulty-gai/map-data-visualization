@@ -139,3 +139,42 @@ map-data-visualization/
 ## Support
 
 For questions or issues, contact the NextGen Academy development team.
+
+## Deployment
+
+The application is deployed to https://visualizations.nextgenafter.school
+
+### Deployment Steps
+
+1. Run the deployment script:
+   ```bash
+   ./deploy.sh
+   ```
+
+2. On first deployment, set up the database:
+   ```bash
+   # SSH into the server
+   ssh -i ~/.ssh/nextgen-academy-key.pem ubuntu@nextgenafter.school
+   
+   # The database is already set up with:
+   # - PostgreSQL 16
+   # - Database: map_data_visualization
+   # - User: mapviz
+   # - Connection string in .env.production
+   
+   # To run migrations manually if needed:
+   cd /var/www/map-data-visualization
+   export DATABASE_URL='postgresql://mapviz:mapviz_prod_2025@localhost:5432/map_data_visualization'
+   npx prisma migrate deploy
+   ```
+
+3. Configure environment variables:
+   - Edit `/var/www/map-data-visualization/.env.production`
+   - Add your Google OAuth credentials
+   - Add your Google Sheets API credentials
+   - Generate and add NEXTAUTH_SECRET
+
+4. Restart the application:
+   ```bash
+   pm2 restart map-data-visualization
+   ```

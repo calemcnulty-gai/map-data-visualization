@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { fileStorage } from '@/services/storage/file-storage';
 import JSZip from 'jszip';
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Add each visualization to the ZIP
     for (const viz of visualizations) {
       try {
-        const fileData = await fileStorage.getVisualization(viz.id);
+        const fileData = await fileStorage.getFile(viz.id, 'visualization');
         if (fileData) {
           // Create a folder structure: StudentName/subject_filename.png
           const folderName = viz.studentName.replace(/[^a-zA-Z0-9\s]/g, '');

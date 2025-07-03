@@ -14,7 +14,6 @@ import {
 import { DEFAULT_VISUALIZATION_CONFIG, VisualizationConfig, VisualizationTemplate } from '@/lib/types';
 import { 
   ArrowLeft, 
-  Download, 
   Loader2, 
   Package, 
   CheckCircle2,
@@ -40,7 +39,7 @@ export default function BatchVisualizePage() {
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [config, setConfig] = useState<VisualizationConfig>(DEFAULT_VISUALIZATION_CONFIG);
-  const [selectedSubject, setSelectedSubject] = useState<'math' | 'reading' | 'both'>('both');
+  const [selectedSubject, setSelectedSubject] = useState<'math' | 'reading' | 'language' | 'science' | 'all'>('all');
   const [progress, setProgress] = useState<BatchProgress>({
     total: 0,
     completed: 0,
@@ -60,7 +59,7 @@ export default function BatchVisualizePage() {
 
   const generateVisualizationForStudent = async (
     student: typeof selectedStudents[0], 
-    subject: 'math' | 'reading'
+    subject: 'math' | 'reading' | 'language' | 'science'
   ): Promise<string | null> => {
     try {
       if (!student.scores[subject]) {
@@ -169,8 +168,12 @@ export default function BatchVisualizePage() {
     setIsGenerating(true);
     setGeneratedFiles([]);
     
-    const subjects: ('math' | 'reading')[] = 
-      selectedSubject === 'both' ? ['math', 'reading'] : [selectedSubject];
+    const subjects: ('math' | 'reading' | 'language' | 'science')[] = 
+      selectedSubject === 'all' 
+        ? ['math', 'reading', 'language', 'science'].filter(s => 
+            selectedStudents.some(student => student.scores[s as keyof typeof student.scores] !== undefined)
+          ) as ('math' | 'reading' | 'language' | 'science')[]
+        : [selectedSubject];
     
     const totalTasks = selectedStudents.length * subjects.length;
     
@@ -326,12 +329,12 @@ export default function BatchVisualizePage() {
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
-                  value="both"
-                  checked={selectedSubject === 'both'}
-                  onChange={() => setSelectedSubject('both')}
+                  value="all"
+                  checked={selectedSubject === 'all'}
+                  onChange={() => setSelectedSubject('all')}
                   disabled={isGenerating}
                 />
-                Both Subjects
+                All Subjects
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -352,6 +355,26 @@ export default function BatchVisualizePage() {
                   disabled={isGenerating}
                 />
                 Reading Only
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="language"
+                  checked={selectedSubject === 'language'}
+                  onChange={() => setSelectedSubject('language')}
+                  disabled={isGenerating}
+                />
+                Language Only
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="science"
+                  checked={selectedSubject === 'science'}
+                  onChange={() => setSelectedSubject('science')}
+                  disabled={isGenerating}
+                />
+                Science Only
               </label>
             </div>
           </Card>

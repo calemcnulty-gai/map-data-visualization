@@ -17,6 +17,7 @@ export interface Student {
 export interface SubjectScores {
   math?: MapScore;
   reading?: MapScore;
+  language?: MapScore;
   science?: MapScore;
 }
 

@@ -6,7 +6,6 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import * as d3 from 'd3';
 import { Student, VisualizationConfig } from '@/lib/types';
 import { StudentPerformanceChart } from './student-performance-chart';
 import {
@@ -26,7 +25,7 @@ import {
 
 interface MapVisualizationProps {
   student: Student;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'language' | 'science';
   config: VisualizationConfig;
   onRenderComplete?: () => void;
 }
@@ -40,6 +39,18 @@ export function MapVisualization({
   const containerRef = useRef<HTMLDivElement>(null);
   const dimensions = VISUALIZATION_DIMENSIONS[config.layout];
   
+  // Call onRenderComplete when component mounts and chart is ready
+  useEffect(() => {
+    // Give the chart time to render
+    const timer = setTimeout(() => {
+      if (onRenderComplete) {
+        onRenderComplete();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [onRenderComplete]);
+  
   const score = student.scores[subject];
   if (!score) {
     return <div>No {subject} score available for this student</div>;
@@ -49,7 +60,8 @@ export function MapVisualization({
   const projections = calculateAllProjections(
     score.ritScore,
     score.percentile,
-    subject
+    subject,
+    student.grade
   ).filter(p => config.packages.includes(p.package));
 
   const hoursToGradeLevel = calculateHoursToGradeLevel(
@@ -99,18 +111,6 @@ export function MapVisualization({
       hoursTo90thPercentile: hoursTo90th,
     },
   };
-
-  // Call onRenderComplete when component mounts and chart is ready
-  useEffect(() => {
-    // Give the chart time to render
-    const timer = setTimeout(() => {
-      if (onRenderComplete) {
-        onRenderComplete();
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [onRenderComplete]);
 
   return (
     <div

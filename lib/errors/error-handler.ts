@@ -169,4 +169,21 @@ export function formatValidationErrors(errors: any[]): string {
       return `${field}: ${error.message}`;
     })
     .join(', ');
+}
+
+// API route error handler
+export async function handleApiError(
+  error: unknown,
+  _res?: Response
+): Promise<Response> {
+  logError(error);
+  const errorResponse = formatErrorResponse(error);
+  const statusCode = error instanceof AppError ? error.statusCode : 500;
+  
+  return new Response(JSON.stringify(errorResponse), {
+    status: statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 } 

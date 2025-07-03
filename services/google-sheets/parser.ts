@@ -47,10 +47,10 @@ function parseGrade(gradeStr: string): number {
 /**
  * Parse a single MAP score from sheet data
  * @param {SheetRow} row - Raw sheet row data
- * @param {string} subject - Subject (math or reading)
+ * @param {string} subject - Subject
  * @returns {MapScore | undefined} Parsed MAP score or undefined
  */
-function parseMapScore(row: SheetRow, subject: 'math' | 'reading'): MapScore | undefined {
+function parseMapScore(row: SheetRow, subject: 'math' | 'reading' | 'language' | 'science'): MapScore | undefined {
   const ritScore = parseNumber(row[`${subject}RitScore`]);
   const percentile = parseNumber(row[`${subject}Percentile`]);
   
@@ -83,15 +83,17 @@ export function parseSheetRow(row: SheetRow): Student | null {
   
   const mathScore = parseMapScore(row, 'math');
   const readingScore = parseMapScore(row, 'reading');
+  const languageScore = parseMapScore(row, 'language');
+  const scienceScore = parseMapScore(row, 'science');
   
   // Skip rows with no valid scores
-  if (!mathScore && !readingScore) {
-    console.log('[Parser] Skipping row - no valid math or reading scores:', {
+  if (!mathScore && !readingScore && !languageScore && !scienceScore) {
+    console.log('[Parser] Skipping row - no valid scores:', {
       studentName: row.studentName,
       mathRitScore: row.mathRitScore || 'MISSING',
-      mathPercentile: row.mathPercentile || 'MISSING',
       readingRitScore: row.readingRitScore || 'MISSING',
-      readingPercentile: row.readingPercentile || 'MISSING'
+      languageRitScore: row.languageRitScore || 'MISSING',
+      scienceRitScore: row.scienceRitScore || 'MISSING'
     });
     return null;
   }
@@ -104,6 +106,8 @@ export function parseSheetRow(row: SheetRow): Student | null {
     scores: {
       math: mathScore,
       reading: readingScore,
+      language: languageScore,
+      science: scienceScore,
     },
     lastUpdated: new Date(),
   };
@@ -117,7 +121,7 @@ export function parseSheetRow(row: SheetRow): Student | null {
  * @param {string} subject - Subject to check
  * @returns {boolean} True if student has valid data for the subject
  */
-export function validateStudentData(student: Student, subject: 'math' | 'reading' | 'science'): boolean {
+export function validateStudentData(student: Student, subject: 'math' | 'reading' | 'language' | 'science'): boolean {
   const score = student.scores[subject];
   
   if (!score) return false;

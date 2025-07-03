@@ -4,6 +4,8 @@
  */
 
 import { TutoringPackage } from '@/lib/types';
+import { RIT_TO_R50 } from './lookup-tables';
+import { getPercentileFromRIT, getRITFromPercentile } from './percentile-calculator';
 
 // Based on the RIT Score Calculations document
 const HOURS_PER_PACKAGE: Record<TutoringPackage, number> = {
@@ -12,71 +14,12 @@ const HOURS_PER_PACKAGE: Record<TutoringPackage, number> = {
   '40-hour': 40,
 };
 
-// Percentile lookup table from RIT Score Calculations document
-// Format: [percentile][grade] = RIT score
-const PERCENTILE_LOOKUP: Record<number, Record<number, number>> = {
-  50: { 1: 176, 2: 189, 3: 201, 4: 211, 5: 219, 6: 223, 7: 227, 8: 230, 9: 230, 10: 232, 11: 234, 12: 234 },
-  73: { 1: 184, 2: 198, 3: 210, 4: 220, 5: 229, 6: 234, 7: 238, 8: 243, 9: 243, 10: 245, 11: 248, 12: 249 },
-  90: { 1: 193, 2: 207, 3: 219, 4: 230, 5: 240, 6: 245, 7: 251, 8: 256, 9: 256, 10: 260, 11: 262, 12: 266 },
-};
-
-// R50 (Knows Half of Curriculum) lookup table from the document
-const RIT_TO_R50: Record<number, number> = {
-  187: 3.0,
-  189: 3.2,
-  193: 3.5,
-  196: 3.7,
-  199: 3.9,
-  200: 4.0,
-  203: 4.2,
-  205: 4.4,
-  209: 4.7,
-  211: 4.9,
-  213: 5.0,
-  215: 5.2,
-  217: 5.4,
-  219: 5.5,
-  221: 5.7,
-  223: 5.9,
-  225: 6.0,
-  227: 6.2,
-  229: 6.4,
-  231: 6.5,
-  233: 6.7,
-  235: 6.9,
-  237: 7.1,
-  240: 7.4,
-  241: 7.5,
-  243: 7.6,
-  245: 7.8,
-  247: 8.0,
-  249: 8.2,
-  251: 8.4,
-  253: 8.6,
-  255: 8.8,
-  257: 9.0,
-  259: 9.2,
-  261: 9.3,
-  263: 9.5,
-  265: 9.7,
-  267: 9.9,
-  269: 10.1,
-  271: 10.2,
-  273: 10.4,
-  275: 10.5,
-  277: 10.6,
-  279: 10.7,
-  281: 10.8,
-  283: 10.9,
-  285: 11.0,
-};
-
 // Grade level improvements based on hours
-const GRADE_IMPROVEMENT_PER_HOURS: Record<number, number> = {
-  10: 0.2,
-  20: 0.5,
-  40: 1.0,
-};
+// const GRADE_IMPROVEMENT_PER_HOURS: Record<number, number> = {
+//   10: 0.2,
+//   20: 0.5,
+//   40: 1.0,
+// };
 
 /**
  * Get R50 value for a given RIT score
@@ -123,37 +66,7 @@ function getR50(ritScore: number): number {
  * @returns {number} RIT score
  */
 export function getRITForPercentile(percentile: number, grade: number): number {
-  // Get exact percentile if available
-  if (PERCENTILE_LOOKUP[percentile] && PERCENTILE_LOOKUP[percentile][grade]) {
-    return PERCENTILE_LOOKUP[percentile][grade];
-  }
-  
-  // Otherwise interpolate
-  const availablePercentiles = Object.keys(PERCENTILE_LOOKUP).map(Number).sort((a, b) => a - b);
-  
-  // Find nearest percentiles
-  let lowerPerc = availablePercentiles[0];
-  let upperPerc = availablePercentiles[availablePercentiles.length - 1];
-  
-  for (let i = 0; i < availablePercentiles.length - 1; i++) {
-    if (availablePercentiles[i] <= percentile && availablePercentiles[i + 1] >= percentile) {
-      lowerPerc = availablePercentiles[i];
-      upperPerc = availablePercentiles[i + 1];
-      break;
-    }
-  }
-  
-  // Get RIT scores for the grade at these percentiles
-  const lowerRIT = PERCENTILE_LOOKUP[lowerPerc][grade] || 200;
-  const upperRIT = PERCENTILE_LOOKUP[upperPerc][grade] || 250;
-  
-  // Linear interpolation
-  if (lowerPerc === upperPerc) {
-    return lowerRIT;
-  }
-  
-  const ratio = (percentile - lowerPerc) / (upperPerc - lowerPerc);
-  return Math.round(lowerRIT + (upperRIT - lowerRIT) * ratio);
+  return getRITFromPercentile(percentile, grade);
 }
 
 /**
@@ -190,16 +103,16 @@ function calculateHoursFromImprovement(improvement: number): number {
  * Calculate projected RIT score improvement
  * @param {number} currentScore - Student's current RIT score
  * @param {number} tutoringHours - Number of tutoring hours
- * @param {string} subject - Academic subject (math/reading)
+ * @param {string} subject - Academic subject
  * @returns {number} Projected new RIT score
  */
 export function calculateRitImprovement(
   currentScore: number,
   tutoringHours: number,
-  subject: 'math' | 'reading'
+  _subject: 'math' | 'reading' | 'language' | 'science'
 ): number {
   // Get current R50
-  const currentR50 = getR50(currentScore);
+  // const currentR50 = getR50(currentScore);
   
   // Calculate grade level improvement based on hours
   let gradeImprovement = 0;
@@ -214,7 +127,7 @@ export function calculateRitImprovement(
   }
   
   // New R50
-  const newR50 = currentR50 + gradeImprovement;
+  // const newR50 = currentR50 + gradeImprovement;
   
   // Convert back to RIT score (this would need the reverse lookup table)
   // For now, approximate: 1 grade level ≈ 10-12 RIT points
@@ -227,13 +140,13 @@ export function calculateRitImprovement(
  * Calculate hours needed to reach grade level
  * @param {number} currentScore - Student's current RIT score
  * @param {number} grade - Student's grade level
- * @param {string} subject - Academic subject (math/reading)
+ * @param {string} subject - Academic subject
  * @returns {number} Hours needed to reach grade level
  */
 export function calculateHoursToGradeLevel(
   currentScore: number,
   grade: number,
-  subject: 'math' | 'reading'
+  _subject: 'math' | 'reading' | 'language' | 'science'
 ): number {
   // Get grade level RIT score (50th percentile)
   const targetScore = getRITForPercentile(50, grade);
@@ -255,14 +168,14 @@ export function calculateHoursToGradeLevel(
  * @param {number} currentScore - Student's current RIT score
  * @param {number} currentPercentile - Student's current percentile
  * @param {number} grade - Student's grade level
- * @param {string} subject - Academic subject (math/reading)
+ * @param {string} subject - Academic subject
  * @returns {number} Hours needed to reach 90th percentile
  */
 export function calculateHoursTo90thPercentile(
   currentScore: number,
   currentPercentile: number,
   grade: number,
-  subject: 'math' | 'reading'
+  _subject: 'math' | 'reading' | 'language' | 'science'
 ): number {
   if (currentPercentile >= 90) {
     return 0; // Already at or above 90th percentile
@@ -286,35 +199,43 @@ export function calculateHoursTo90thPercentile(
 /**
  * Get grade level RIT score target
  * @param {number} grade - Grade level
- * @param {string} subject - Academic subject (math/reading)
+ * @param {string} subject - Academic subject
  * @returns {number} Target RIT score for grade level
  */
-export function getGradeLevelRitScore(grade: number, subject: 'math' | 'reading'): number {
+export function getGradeLevelRitScore(grade: number, _subject: 'math' | 'reading' | 'language' | 'science'): number {
   return getRITForPercentile(50, grade);
 }
 
 /**
  * Get 90th percentile RIT score for a grade level
  * @param {number} grade - Grade level
- * @param {string} subject - Academic subject (math/reading)
+ * @param {string} subject - Academic subject
  * @returns {number} 90th percentile RIT score
  */
-export function get90thPercentileRitScore(grade: number, subject: 'math' | 'reading'): number {
+export function get90thPercentileRitScore(grade: number, _subject: 'math' | 'reading' | 'language' | 'science'): number {
   return getRITForPercentile(90, grade);
 }
 
 /**
- * Convert RIT score improvement to percentile change (approximate)
+ * Convert RIT score improvement to percentile change
  * @param {number} currentScore - Current RIT score
  * @param {number} newScore - New RIT score
  * @param {number} currentPercentile - Current percentile
+ * @param {number} grade - Student's grade level
  * @returns {number} Estimated new percentile
  */
 export function estimateNewPercentile(
   currentScore: number,
   newScore: number,
-  currentPercentile: number
+  currentPercentile: number,
+  grade?: number
 ): number {
+  // If we have the grade, use the accurate lookup
+  if (grade !== undefined) {
+    return getPercentileFromRIT(newScore, grade);
+  }
+  
+  // Otherwise use the old approximation for backward compatibility
   const scoreDiff = newScore - currentScore;
   
   // Rough approximation: 1 RIT point ≈ 1.5 percentile points
@@ -373,16 +294,18 @@ export function getEffectiveGradeLevel(ritScore: number): number {
  * @param {number} currentScore - Current RIT score
  * @param {number} currentPercentile - Current percentile
  * @param {string} subject - Academic subject
+ * @param {number} grade - Student's grade level
  * @returns {Array} Array of projections for each package
  */
 export function calculateAllProjections(
   currentScore: number,
   currentPercentile: number,
-  subject: 'math' | 'reading'
+  subject: 'math' | 'reading' | 'language' | 'science',
+  grade?: number
 ) {
   return Object.entries(HOURS_PER_PACKAGE).map(([packageName, hours]) => {
     const projectedScore = calculateRitImprovement(currentScore, hours, subject);
-    const projectedPercentile = estimateNewPercentile(currentScore, projectedScore, currentPercentile);
+    const projectedPercentile = estimateNewPercentile(currentScore, projectedScore, currentPercentile, grade);
     
     return {
       package: packageName as TutoringPackage,

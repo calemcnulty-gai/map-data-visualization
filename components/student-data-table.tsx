@@ -29,7 +29,7 @@ export function StudentDataTable({ onGenerateVisualization }: StudentDataTablePr
   const {
     students,
     selectedStudents,
-    isLoading,
+    isLoading: _isLoading,
     isSyncing,
     lastSyncTime,
     syncError,
@@ -200,6 +200,8 @@ export function StudentDataTable({ onGenerateVisualization }: StudentDataTablePr
                   <option value="all">All Subjects</option>
                   <option value="math">Math Only</option>
                   <option value="reading">Reading Only</option>
+                  <option value="language">Language Only</option>
+                  <option value="science">Science Only</option>
                 </select>
               </div>
             </div>
@@ -269,10 +271,10 @@ export function StudentDataTable({ onGenerateVisualization }: StudentDataTablePr
                 </th>
                 <th className="p-4 text-left font-medium">Student Name</th>
                 <th className="p-4 text-left font-medium">Grade</th>
-                <th className="p-4 text-center font-medium">Math RIT</th>
-                <th className="p-4 text-center font-medium">Math %ile</th>
-                <th className="p-4 text-center font-medium">Reading RIT</th>
-                <th className="p-4 text-center font-medium">Reading %ile</th>
+                <th className="p-4 text-center font-medium">Math</th>
+                <th className="p-4 text-center font-medium">Reading</th>
+                <th className="p-4 text-center font-medium">Language</th>
+                <th className="p-4 text-center font-medium">Science</th>
               </tr>
             </thead>
             <tbody>
@@ -305,17 +307,37 @@ export function StudentDataTable({ onGenerateVisualization }: StudentDataTablePr
                     </td>
                     <td className="p-4 font-medium">{student.name}</td>
                     <td className="p-4">{student.grade}</td>
-                    <td className="p-4 text-center">
-                      {student.scores.math?.ritScore || '-'}
+                    <td className="p-4 text-center text-sm">
+                      {student.scores.math ? (
+                        <div>
+                          <div className="font-medium">{student.scores.math.ritScore}</div>
+                          <div className="text-muted-foreground">{student.scores.math.percentile}%</div>
+                        </div>
+                      ) : '-'}
                     </td>
-                    <td className="p-4 text-center">
-                      {student.scores.math?.percentile ? `${student.scores.math.percentile}%` : '-'}
+                    <td className="p-4 text-center text-sm">
+                      {student.scores.reading ? (
+                        <div>
+                          <div className="font-medium">{student.scores.reading.ritScore}</div>
+                          <div className="text-muted-foreground">{student.scores.reading.percentile}%</div>
+                        </div>
+                      ) : '-'}
                     </td>
-                    <td className="p-4 text-center">
-                      {student.scores.reading?.ritScore || '-'}
+                    <td className="p-4 text-center text-sm">
+                      {student.scores.language ? (
+                        <div>
+                          <div className="font-medium">{student.scores.language.ritScore}</div>
+                          <div className="text-muted-foreground">{student.scores.language.percentile}%</div>
+                        </div>
+                      ) : '-'}
                     </td>
-                    <td className="p-4 text-center">
-                      {student.scores.reading?.percentile ? `${student.scores.reading.percentile}%` : '-'}
+                    <td className="p-4 text-center text-sm">
+                      {student.scores.science ? (
+                        <div>
+                          <div className="font-medium">{student.scores.science.ritScore}</div>
+                          <div className="text-muted-foreground">{student.scores.science.percentile}%</div>
+                        </div>
+                      ) : '-'}
                     </td>
                   </tr>
                 ))

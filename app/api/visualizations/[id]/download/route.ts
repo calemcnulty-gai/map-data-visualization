@@ -5,18 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { getFile } from '@/services/storage/file-storage';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/visualizations/[id]/download - Download a visualization file
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -33,7 +30,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { id } = params;
+    const { id } = await context.params;
 
     // Fetch visualization metadata
     const visualization = await prisma.visualization.findUnique({

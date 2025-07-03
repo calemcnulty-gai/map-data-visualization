@@ -162,4 +162,14 @@ export function getStoragePath(
 ): string {
   const basePath = type === 'visualization' ? VISUALIZATIONS_PATH : TEMP_PATH;
   return path.join(basePath, id);
-} 
+}
+
+// Export as a single object for convenience
+export const fileStorage = {
+  saveFile,
+  getFile,
+  deleteFile,
+  cleanupOldFiles,
+  getFileMetadata,
+  getStoragePath,
+}; 

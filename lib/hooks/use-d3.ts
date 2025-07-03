@@ -28,7 +28,9 @@ export function useD3<T extends SVGElement>(
         svg.selectAll('*').remove();
       };
     }
-  }, dependencies);
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderFn, ...dependencies]);
 
   return ref;
 } 

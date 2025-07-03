@@ -4,9 +4,10 @@
  */
 
 import { google, sheets_v4 } from 'googleapis';
-import { SheetRow, Student, MapScore } from '@/lib/types';
-import { parseSheetRow } from './parser';
+import { Student, MapScore } from '@/lib/types';
+// import { parseSheetRow } from './parser';
 import { generateId } from '@/lib/utils';
+import { getPercentileFromRIT } from '@/lib/calculations/percentile-calculator';
 
 export class GoogleSheetsClient {
   private sheets: sheets_v4.Sheets;
@@ -91,6 +92,7 @@ export class GoogleSheetsClient {
         age?: number;
         mathScore?: MapScore;
         readingScore?: MapScore;
+        languageScore?: MapScore;
         scienceScore?: MapScore;
       }>();
 
@@ -132,10 +134,13 @@ export class GoogleSheetsClient {
 
         const student = studentMap.get(studentName)!;
 
+        // Calculate percentile if not provided
+        const calculatedPercentile = percentile || getPercentileFromRIT(ritScore, grade);
+        
         // Create MAP score object
         const mapScore: MapScore = {
           ritScore,
-          percentile: percentile || 0,
+          percentile: calculatedPercentile,
           testDate: new Date(),
         };
 
@@ -144,6 +149,8 @@ export class GoogleSheetsClient {
           student.mathScore = mapScore;
         } else if (subject === 'reading') {
           student.readingScore = mapScore;
+        } else if (subject === 'language') {
+          student.languageScore = mapScore;
         } else if (subject === 'science') {
           student.scienceScore = mapScore;
         }
@@ -171,6 +178,7 @@ export class GoogleSheetsClient {
           scores: {
             math: data.mathScore,
             reading: data.readingScore,
+            language: data.languageScore,
             science: data.scienceScore,
           },
           lastUpdated: new Date(),
@@ -182,11 +190,13 @@ export class GoogleSheetsClient {
       // Log summary
       let mathCount = 0;
       let readingCount = 0;
+      let languageCount = 0;
       let scienceCount = 0;
       
       students.forEach(student => {
         if (student.scores.math) mathCount++;
         if (student.scores.reading) readingCount++;
+        if (student.scores.language) languageCount++;
         if (student.scores.science) scienceCount++;
       });
 
@@ -194,6 +204,7 @@ export class GoogleSheetsClient {
       console.log(`  - Total unique students: ${students.length}`);
       console.log(`  - Students with math scores: ${mathCount}`);
       console.log(`  - Students with reading scores: ${readingCount}`);
+      console.log(`  - Students with language scores: ${languageCount}`);
       console.log(`  - Students with science scores: ${scienceCount}`);
 
       // Log first few students for debugging
@@ -203,9 +214,11 @@ export class GoogleSheetsClient {
           grade: student.grade,
           hasMath: !!student.scores.math,
           hasReading: !!student.scores.reading,
+          hasLanguage: !!student.scores.language,
           hasScience: !!student.scores.science,
           mathScore: student.scores.math?.ritScore,
           readingScore: student.scores.reading?.ritScore,
+          languageScore: student.scores.language?.ritScore,
           scienceScore: student.scores.science?.ritScore,
         });
       });
@@ -223,7 +236,7 @@ export class GoogleSheetsClient {
    */
   async getSheetMetadata(): Promise<{ lastModified: Date }> {
     try {
-      const response = await this.sheets.spreadsheets.get({
+      await this.sheets.spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
         fields: 'properties.title,properties.timeZone,sheets.properties',
       });

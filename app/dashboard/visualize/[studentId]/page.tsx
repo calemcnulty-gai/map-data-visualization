@@ -29,7 +29,7 @@ export default function VisualizePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState<VisualizationConfig>(DEFAULT_VISUALIZATION_CONFIG);
-  const [selectedSubject, setSelectedSubject] = useState<'math' | 'reading'>('math');
+  const [selectedSubject, setSelectedSubject] = useState<'math' | 'reading' | 'language' | 'science'>('math');
   const visualizationRef = useRef<HTMLDivElement>(null);
 
   // Find the student from store or selected students
@@ -76,7 +76,10 @@ export default function VisualizePage() {
   }
 
   const hasSubjectData = student.scores[selectedSubject] !== undefined;
-  const hasAnyData = student.scores.math !== undefined || student.scores.reading !== undefined;
+  const hasAnyData = student.scores.math !== undefined || 
+                     student.scores.reading !== undefined ||
+                     student.scores.language !== undefined ||
+                     student.scores.science !== undefined;
 
   const handleDownload = async () => {
     if (!visualizationRef.current) return;
@@ -154,7 +157,7 @@ export default function VisualizePage() {
     }
   };
 
-  const handleSubjectChange = (subject: 'math' | 'reading') => {
+  const handleSubjectChange = (subject: 'math' | 'reading' | 'language' | 'science') => {
     setSelectedSubject(subject);
   };
 
@@ -240,6 +243,32 @@ export default function VisualizePage() {
                   />
                   Reading
                   {!student.scores.reading && (
+                    <span className="text-xs text-muted-foreground">(No data)</span>
+                  )}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="language"
+                    checked={selectedSubject === 'language'}
+                    onChange={() => handleSubjectChange('language')}
+                    disabled={!student.scores.language || isGenerating}
+                  />
+                  Language
+                  {!student.scores.language && (
+                    <span className="text-xs text-muted-foreground">(No data)</span>
+                  )}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="science"
+                    checked={selectedSubject === 'science'}
+                    onChange={() => handleSubjectChange('science')}
+                    disabled={!student.scores.science || isGenerating}
+                  />
+                  Science
+                  {!student.scores.science && (
                     <span className="text-xs text-muted-foreground">(No data)</span>
                   )}
                 </label>

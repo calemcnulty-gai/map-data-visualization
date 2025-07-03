@@ -8,7 +8,7 @@
 import React from 'react';
 import * as d3 from 'd3';
 import { useD3 } from '@/lib/hooks/use-d3';
-import { ChartData, ProjectionDataPoint } from '@/lib/types';
+import { ChartData } from '@/lib/types';
 import {
   BRAND_COLORS,
   CHART_COLORS,
@@ -84,7 +84,7 @@ export function StudentPerformanceChart({
       // Calculate projections for these intervals
       const dynamicProjections = projectionIntervals.map(hours => {
         const projectedScore = calculateRitImprovement(data.currentScore, hours, data.subject);
-        const projectedPercentile = estimateNewPercentile(data.currentScore, projectedScore, data.currentPercentile);
+        const projectedPercentile = estimateNewPercentile(data.currentScore, projectedScore, data.currentPercentile, data.gradeLevel);
         return {
           label: `${hours}hr`,
           score: projectedScore,
@@ -142,10 +142,10 @@ export function StudentPerformanceChart({
         .range([chartHeight - CHART_SETTINGS.margins.bottom, CHART_SETTINGS.margins.top]);
 
       // Create a secondary scale for percentiles
-      const percentileScale = d3
-        .scaleLinear()
-        .domain([0, 100])
-        .range([chartHeight - CHART_SETTINGS.margins.bottom, CHART_SETTINGS.margins.top]);
+      // const percentileScale = d3
+      //   .scaleLinear()
+      //   .domain([0, 100])
+      //   .range([chartHeight - CHART_SETTINGS.margins.bottom, CHART_SETTINGS.margins.top]);
 
       // Add percentile background bands
       const percentileBands = [
@@ -192,12 +192,12 @@ export function StudentPerformanceChart({
       // Add percentile labels on the right
       const percentileAxis = d3.axisRight(yScale)
         .tickValues([1, 10, 25, 50, 75, 90, 99])
-        .tickFormat(d => {
+        .tickFormat((d) => {
           // Find the closest percentile for this RIT score
           const percentiles = [1, 10, 25, 50, 75, 90, 99];
-          for (let p of percentiles) {
+          for (const p of percentiles) {
             const ritForP = getRITForPercentile(p, data.gradeLevel);
-            if (Math.abs(ritForP - d) < 3) {
+            if (Math.abs(ritForP - Number(d)) < 3) {
               return `${p}%`;
             }
           }

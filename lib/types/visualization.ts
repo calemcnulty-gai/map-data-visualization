@@ -47,7 +47,7 @@ export interface VisualizationMetadata {
   id: string;
   studentId: string;
   studentName: string;
-  subject: 'math' | 'reading' | 'both';
+  subject: 'math' | 'reading' | 'language' | 'science' | 'all';
   generatedAt: Date;
   generatedBy: string;
   config: VisualizationConfig;
@@ -59,7 +59,7 @@ export interface VisualizationMetadata {
 export interface VisualizationRequest {
   studentIds: string[];
   config: VisualizationConfig;
-  subject: 'math' | 'reading' | 'both';
+  subject: 'math' | 'reading' | 'language' | 'science' | 'all';
 }
 
 /** Visualization generation response */
@@ -77,7 +77,7 @@ export interface VisualizationResponse {
 export interface GeneratedVisualization {
   id: string;
   studentName: string;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'language' | 'science';
   imageData: string; // Base64 encoded PNG
   metadata: VisualizationMetadata;
   downloadUrl: string;
@@ -86,7 +86,7 @@ export interface GeneratedVisualization {
 /** Chart data structure for D3.js */
 export interface ChartData {
   student: Student;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'language' | 'science';
   currentScore: number;
   currentPercentile: number;
   gradeLevel: number;

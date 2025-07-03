@@ -32,7 +32,9 @@
 - [x] Create nginx configuration for subdomain
 - [x] Create PM2 ecosystem configuration
 - [x] Create deployment scripts
-- [in progress] Deploy to visualizations.nextgenafter.school
+- [x] Fix all build errors for production
+- [x] Successfully build for production
+- [not started] Deploy to visualizations.nextgenafter.school
 - [not started] Configure SSL certificate
 - [not started] Set up production environment variables
 
@@ -101,7 +103,15 @@
 - [x] done - Create "Comparative Analysis" template
 - [x] done - Implement template preview system
 
-### 4. Customization Options
+### 4. Subject Support Enhancement
+- [x] done - Add support for Language subject
+- [x] done - Add support for Science subject
+- [x] done - Update student data table to show all subjects
+- [x] done - Update visualization pages for all subjects
+- [x] done - Implement percentile calculation from RIT and grade
+- [x] done - Update Google Sheets parser for all subjects
+
+### 5. Customization Options
 - [ ] not started - Create visualization configuration panel
 - [ ] not started - Add toggle controls for data points
 - [ ] not started - Implement package selection (10/20/40 hours)
