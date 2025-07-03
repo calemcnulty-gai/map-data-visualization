@@ -111,6 +111,24 @@ The foundation is solid and ready for core functionality implementation once dat
 5. Test authentication flow
 
 ## 2025-01-02
+### Initial Setup
+- Created new repository: https://github.com/calemcnulty-gai/map-data-visualization
+- Pushed initial commit with all project files
+- Project disconnected from template repository
+
+### Deployment Configuration
+- Created nginx configuration for visualizations.nextgenafter.school subdomain
+- Created PM2 ecosystem configuration for process management
+- Created deployment script (deploy.sh) for automated deployment
+- Created server setup script (setup-server.sh) to install PM2 and prepare environment
+- Configured reverse proxy setup to run Next.js app on port 3000
+
+### Next Steps
+- Run setup-server.sh to prepare the server
+- Deploy application using deploy.sh
+- Configure environment variables on server
+- Set up SSL certificate with Certbot
+
 ### Phase 2: MVP Started
 - Began implementation of core MVP functionality
 - Focus on Google Sheets integration and student data visualization
