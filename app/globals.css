@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* NextGen Brand Colors */
+  --nextgen-green: #67BC44;
+  --nextgen-purple: #251931;
+  --nextgen-green-light: #7FCA5F;
+  --nextgen-green-dark: #559A36;
+  --nextgen-purple-light: #3A2A42;
+  --nextgen-purple-dark: #1A1222;
+  
+  /* Theme Colors */
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: var(--nextgen-green);
+  --primary-foreground: #ffffff;
+  --secondary: var(--nextgen-purple);
+  --secondary-foreground: #ffffff;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: var(--nextgen-green-light);
+  --accent-foreground: #171717;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: var(--nextgen-green);
+  
+  /* Spacing */
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card: #171717;
+    --card-foreground: #ededed;
+    --popover: #171717;
+    --popover-foreground: #ededed;
+    --muted: #262626;
+    --muted-foreground: #a3a3a3;
+    --accent: var(--nextgen-green-dark);
+    --accent-foreground: #ededed;
+    --border: #262626;
+    --input: #262626;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-4xl lg:text-5xl;
+  }
+  
+  h2 {
+    @apply text-3xl lg:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl lg:text-3xl;
+  }
+  
+  h4 {
+    @apply text-xl lg:text-2xl;
+  }
+  
+  h5 {
+    @apply text-lg lg:text-xl;
+  }
+  
+  h6 {
+    @apply text-base lg:text-lg;
+  }
+}
+
+@layer components {
+  /* Utility classes for NextGen branding */
+  .gradient-nextgen {
+    @apply bg-gradient-to-r from-nextgen-green to-nextgen-green-light;
+  }
+  
+  .gradient-nextgen-dark {
+    @apply bg-gradient-to-r from-nextgen-purple to-nextgen-purple-light;
+  }
+  
+  .text-gradient-nextgen {
+    @apply bg-gradient-to-r from-nextgen-green to-nextgen-green-light bg-clip-text text-transparent;
+  }
+}

@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Visualization {
+  id                 String              @id @default(cuid())
+  studentId          String
+  studentName        String
+  subject            String
+  grade              Int
+  fileId             String              @unique
+  fileName           String
+  fileSize           Int?
+  config             Json
+  ritScore           Int
+  percentile         Int
+  hoursToGradeLevel  Int
+  hoursTo90th        Int
+  recommendedPackage String
+  generatedBy        String
+  generatedAt        DateTime            @default(now())
+  batchId            String?
+  batch              BatchVisualization? @relation(fields: [batchId], references: [id])
+
+  @@index([studentName])
+  @@index([generatedBy])
+  @@index([generatedAt])
+  @@index([batchId])
+}
+
+model BatchVisualization {
+  id             String          @id @default(cuid())
+  name           String?
+  studentCount   Int
+  generatedBy    String
+  generatedAt    DateTime        @default(now())
+  completedAt    DateTime?
+  visualizations Visualization[]
+
+  @@index([generatedBy])
+  @@index([generatedAt])
+}
